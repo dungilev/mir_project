@@ -1,0 +1,54 @@
+base_local_planner: dwa_local_planner/DWAPlannerROS
+DWAPlannerROS:
+  # --- CẤU HÌNH TỐC ĐỘ (Rùa bò nhưng chắc chắn) ---
+  max_vel_x:  0.35    # Giữ tốc độ thấp để giảm quán tính
+  min_vel_x: -0.1     
+
+  max_vel_y: 0.0      
+  min_vel_y: 0.0
+
+  max_trans_vel: 0.35 
+  min_trans_vel: 0.1
+  trans_stopped_vel: 0.01
+
+  max_rot_vel: 0.5    # Giảm thêm tốc độ xoay (cũ 0.6) để robot không bị văng khi cua gấp
+  min_rot_vel: 0.1
+  rot_stopped_vel: 0.1
+
+  # --- GIA TỐC (GIẢM SÂU ĐỂ CHỐNG TRƯỢT) ---
+  # Đây là chìa khóa chống trôi: Tăng/Giảm tốc cực chậm để bánh xe bám sàn
+  acc_lim_x: 0.2      # Giảm cực thấp (cũ 0.5). Robot sẽ khởi động rất êm.
+  acc_lim_y: 0.0
+  acc_limit_trans: 0.2
+  acc_lim_theta: 0.5  # Xoay từ từ thôi
+
+  # --- ĐỘ CHẤP NHẬN MỤC TIÊU ---
+  yaw_goal_tolerance: 0.20  
+  xy_goal_tolerance: 0.30   
+  latch_xy_goal_tolerance: true
+
+  # --- MÔ PHỎNG TƯƠNG LAI ---
+  sim_time: 2.5       # Tăng thêm thời gian nhìn trước (cũ 2.0) để robot phanh sớm hơn
+  vx_samples: 20      
+  vy_samples: 1       
+  vtheta_samples: 40  
+
+  # --- CÁCH TÍNH ĐIỂM ĐƯỜNG ĐI (QUAN TRỌNG NHẤT) ---
+  # Cấu hình này ép robot đi vào giữa đường (Global Path), tránh xa tường
+  path_distance_bias: 64.0      # Tăng gấp đôi (cũ 32.0). BẮT BUỘC bám theo đường vạch xanh.
+  goal_distance_bias: 10.0      # Giảm xuống (cũ 24.0). Đừng vì ham đích mà cắt cua sát tường.
+  occdist_scale: 0.05           # Tăng nhẹ để robot biết sợ va chạm hơn.
+  forward_point_distance: 0.325
+  stop_time_buffer: 0.2
+  scaling_speed: 0.25
+  max_scaling_factor: 0.2
+  prune_plan: true
+
+  # --- CHỐNG RUNG LẮC ---
+  oscillation_reset_dist: 0.05
+  oscillation_reset_angle: 0.2
+
+  # --- DEBUG ---
+  publish_traj_pc : true
+  publish_cost_grid_pc: true
+  global_frame_id: odom

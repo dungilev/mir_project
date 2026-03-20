@@ -1,0 +1,29 @@
+<launch>
+  <!-- ============================================================
+       Điều khiển MiR thật bằng tay cầm - KẾT NỐI TRỰC TIẾP
+       KHÔNG cần mir_bridge.py (tự kết nối WebSocket đến MiR)
+       
+       Cách dùng:
+         roslaunch mir_driver mir_joystick_direct.launch mir_hostname:=192.168.0.177
+       ============================================================ -->
+
+  <arg name="mir_hostname" default="192.168.12.20" />
+  <arg name="joy_dev" default="/dev/input/js0" />
+  <arg name="max_linear_speed" default="0.3" />
+  <arg name="max_angular_speed" default="0.3" />
+
+  <!-- Đọc tín hiệu từ tay cầm vật lý -->
+  <node name="joy_node" pkg="joy" type="joy_node" output="screen">
+    <param name="dev" value="$(arg joy_dev)" />
+    <param name="deadzone" value="0.1" />
+    <param name="autorepeat_rate" value="20" />
+  </node>
+
+  <!-- Điều khiển trực tiếp (tự kết nối WebSocket đến MiR) -->
+  <node name="mir_joystick_direct" pkg="mir_driver" type="mir_joystick_direct.py" output="screen">
+    <param name="mir_hostname" value="$(arg mir_hostname)" />
+    <param name="max_linear_speed" value="$(arg max_linear_speed)" />
+    <param name="max_angular_speed" value="$(arg max_angular_speed)" />
+  </node>
+
+</launch>

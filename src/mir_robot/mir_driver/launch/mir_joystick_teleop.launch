@@ -1,0 +1,42 @@
+<launch>
+  <!-- ============================================================
+       Launch file điều khiển MiR thật bằng tay cầm (Joystick)
+       
+       Cách dùng:
+         roslaunch mir_driver mir_joystick_teleop.launch mir_hostname:=<IP_CỦA_MIR>
+       
+       Ví dụ:
+         roslaunch mir_driver mir_joystick_teleop.launch mir_hostname:=192.168.12.20
+       ============================================================ -->
+
+  <!-- IP của robot MiR (xem trên web interface của MiR) -->
+  <arg name="mir_hostname" default="192.168.12.20" />
+  <arg name="mir_type" default="mir_100" />
+
+  <!-- Thiết bị joystick (thường là /dev/input/js0) -->
+  <arg name="joy_dev" default="/dev/input/js0" />
+
+  <!-- Tốc độ tối đa (giảm nhỏ khi test lần đầu!) -->
+  <arg name="max_linear_speed" default="0.3" />
+  <arg name="max_angular_speed" default="0.3" />
+
+  <!-- ========== 1. Kết nối đến MiR thật ========== -->
+  <include file="$(find mir_driver)/launch/mir.launch">
+    <arg name="mir_hostname" value="$(arg mir_hostname)" />
+    <arg name="mir_type" value="$(arg mir_type)" />
+  </include>
+
+  <!-- ========== 2. Đọc tín hiệu từ tay cầm vật lý ========== -->
+  <node name="joy_node" pkg="joy" type="joy_node" output="screen">
+    <param name="dev" value="$(arg joy_dev)" />
+    <param name="deadzone" value="0.1" />
+    <param name="autorepeat_rate" value="20" />
+  </node>
+
+  <!-- ========== 3. Chuyển tín hiệu Joy -> cmd_vel ========== -->
+  <node name="mir_joy_teleop" pkg="mir_driver" type="mir_joy_teleop.py" output="screen">
+    <param name="max_linear_speed" value="$(arg max_linear_speed)" />
+    <param name="max_angular_speed" value="$(arg max_angular_speed)" />
+  </node>
+
+</launch>
