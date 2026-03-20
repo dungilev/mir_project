@@ -1,0 +1,21 @@
+[0.008s] Invoking command in '/home/tuanminh/mir_project/build/mir_description': /usr/bin/cmake /home/tuanminh/mir_project/src/mir_robot/mir_description -DCATKIN_INSTALL_INTO_PREFIX_ROOT=0 -DCMAKE_INSTALL_PREFIX=/home/tuanminh/mir_project/install/mir_description
+[0.039s] -- Configuring incomplete, errors occurred!
+[0.039s] See also "/home/tuanminh/mir_project/build/mir_description/CMakeFiles/CMakeOutput.log".
+[0.039s] [31mCMake Error at CMakeLists.txt:4 (find_package):
+[0.039s]   By not providing "Findcatkin.cmake" in CMAKE_MODULE_PATH this project has
+[0.039s]   asked CMake to find a package configuration file provided by "catkin", but
+[0.039s]   CMake did not find one.
+[0.039s] 
+[0.039s]   Could not find a package configuration file provided by "catkin" with any
+[0.039s]   of the following names:
+[0.039s] 
+[0.039s]     catkinConfig.cmake
+[0.039s]     catkin-config.cmake
+[0.039s] 
+[0.039s]   Add the installation prefix of "catkin" to CMAKE_PREFIX_PATH or set
+[0.040s]   "catkin_DIR" to a directory containing one of the above files.  If "catkin"
+[0.040s]   provides a separate development package or SDK, be sure it has been
+[0.040s]   installed.
+[0.040s] 
+[0.040s] [0m
+[0.041s] Invoked command in '/home/tuanminh/mir_project/build/mir_description' returned '1': /usr/bin/cmake /home/tuanminh/mir_project/src/mir_robot/mir_description -DCATKIN_INSTALL_INTO_PREFIX_ROOT=0 -DCMAKE_INSTALL_PREFIX=/home/tuanminh/mir_project/install/mir_description

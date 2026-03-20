@@ -1,0 +1,2 @@
+Invoking command in '/home/tuanminh/mir_project/build/mir_dwb_critics': /usr/bin/cmake /home/tuanminh/mir_project/src/mir_robot/mir_dwb_critics -DCATKIN_INSTALL_INTO_PREFIX_ROOT=0 -DCMAKE_INSTALL_PREFIX=/home/tuanminh/mir_project/install/mir_dwb_critics
+Invoked command in '/home/tuanminh/mir_project/build/mir_dwb_critics' returned '1': /usr/bin/cmake /home/tuanminh/mir_project/src/mir_robot/mir_dwb_critics -DCATKIN_INSTALL_INTO_PREFIX_ROOT=0 -DCMAKE_INSTALL_PREFIX=/home/tuanminh/mir_project/install/mir_dwb_critics

@@ -1,0 +1,335 @@
+[0.054s] DEBUG:colcon:Command line arguments: ['/usr/bin/colcon', 'build']
+[0.054s] DEBUG:colcon:Parsed command line arguments: Namespace(log_base=None, log_level=None, verb_name='build', build_base='build', install_base='install', merge_install=False, symlink_install=False, test_result_base=None, continue_on_error=False, executor='parallel', parallel_workers=20, event_handlers=None, ignore_user_meta=False, metas=['./colcon.meta'], base_paths=['.'], packages_ignore=None, packages_ignore_regex=None, paths=None, packages_up_to=None, packages_up_to_regex=None, packages_above=None, packages_above_and_dependencies=None, packages_above_depth=None, packages_select_by_dep=None, packages_skip_by_dep=None, packages_skip_up_to=None, packages_select_build_failed=False, packages_skip_build_finished=False, packages_select_test_failures=False, packages_skip_test_passed=False, packages_select=None, packages_skip=None, packages_select_regex=None, packages_skip_regex=None, packages_start=None, packages_end=None, allow_overriding=[], cmake_args=None, cmake_target=None, cmake_target_skip_unavailable=False, cmake_clean_cache=False, cmake_clean_first=False, cmake_force_configure=False, ament_cmake_args=None, catkin_cmake_args=None, catkin_skip_building_tests=False, mixin_files=None, mixin=None, verb_parser=<colcon_mixin.mixin.mixin_argument.MixinArgumentDecorator object at 0x7e373af6fa00>, verb_extension=<colcon_core.verb.build.BuildVerb object at 0x7e373af6ef80>, main=<bound method BuildVerb.main of <colcon_core.verb.build.BuildVerb object at 0x7e373af6ef80>>, mixin_verb=('build',))
+[0.125s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) check parameters
+[0.125s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) check parameters
+[0.125s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) check parameters
+[0.125s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) check parameters
+[0.125s] Level 1:colcon.colcon_core.package_discovery:discover_packages(colcon_meta) discover
+[0.125s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) discover
+[0.125s] INFO:colcon.colcon_core.package_discovery:Crawling recursively for packages in '/home/tuanminh/mir_project'
+[0.125s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ignore', 'ignore_ament_install']
+[0.125s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore'
+[0.125s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ignore_ament_install'
+[0.125s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_pkg']
+[0.125s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_pkg'
+[0.126s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['colcon_meta']
+[0.126s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'colcon_meta'
+[0.126s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['ros']
+[0.126s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'ros'
+[0.136s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['cmake', 'python']
+[0.136s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'cmake'
+[0.136s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'python'
+[0.136s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extensions ['python_setup_py']
+[0.136s] Level 1:colcon.colcon_core.package_identification:_identify(.) by extension 'python_setup_py'
+[0.136s] Level 1:colcon.colcon_core.package_identification:_identify(build) by extensions ['ignore', 'ignore_ament_install']
+[0.136s] Level 1:colcon.colcon_core.package_identification:_identify(build) by extension 'ignore'
+[0.136s] Level 1:colcon.colcon_core.package_identification:_identify(build) ignored
+[0.136s] Level 1:colcon.colcon_core.package_identification:_identify(install) by extensions ['ignore', 'ignore_ament_install']
+[0.136s] Level 1:colcon.colcon_core.package_identification:_identify(install) by extension 'ignore'
+[0.136s] Level 1:colcon.colcon_core.package_identification:_identify(install) ignored
+[0.136s] Level 1:colcon.colcon_core.package_identification:_identify(log) by extensions ['ignore', 'ignore_ament_install']
+[0.136s] Level 1:colcon.colcon_core.package_identification:_identify(log) by extension 'ignore'
+[0.136s] Level 1:colcon.colcon_core.package_identification:_identify(log) ignored
+[0.136s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['ignore', 'ignore_ament_install']
+[0.136s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'ignore'
+[0.136s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'ignore_ament_install'
+[0.136s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['colcon_pkg']
+[0.136s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'colcon_pkg'
+[0.136s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['colcon_meta']
+[0.136s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'colcon_meta'
+[0.136s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['ros']
+[0.136s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'ros'
+[0.136s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['cmake', 'python']
+[0.136s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'cmake'
+[0.136s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'python'
+[0.136s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extensions ['python_setup_py']
+[0.136s] Level 1:colcon.colcon_core.package_identification:_identify(src) by extension 'python_setup_py'
+[0.136s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot) by extensions ['ignore', 'ignore_ament_install']
+[0.136s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot) by extension 'ignore'
+[0.136s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot) by extension 'ignore_ament_install'
+[0.136s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot) by extensions ['colcon_pkg']
+[0.136s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot) by extension 'colcon_pkg'
+[0.136s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot) by extensions ['colcon_meta']
+[0.137s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot) by extension 'colcon_meta'
+[0.137s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot) by extensions ['ros']
+[0.137s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot) by extension 'ros'
+[0.137s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot) by extensions ['cmake', 'python']
+[0.137s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot) by extension 'cmake'
+[0.137s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot) by extension 'python'
+[0.137s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot) by extensions ['python_setup_py']
+[0.137s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot) by extension 'python_setup_py'
+[0.137s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_actions) by extensions ['ignore', 'ignore_ament_install']
+[0.137s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_actions) by extension 'ignore'
+[0.137s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_actions) by extension 'ignore_ament_install'
+[0.137s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_actions) by extensions ['colcon_pkg']
+[0.137s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_actions) by extension 'colcon_pkg'
+[0.137s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_actions) by extensions ['colcon_meta']
+[0.137s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_actions) by extension 'colcon_meta'
+[0.137s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_actions) by extensions ['ros']
+[0.137s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_actions) by extension 'ros'
+[0.138s] DEBUG:colcon.colcon_core.package_identification:Package 'src/mir_robot/mir_actions' with type 'ros.catkin' and name 'mir_actions'
+[0.138s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_description) by extensions ['ignore', 'ignore_ament_install']
+[0.138s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_description) by extension 'ignore'
+[0.138s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_description) by extension 'ignore_ament_install'
+[0.138s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_description) by extensions ['colcon_pkg']
+[0.138s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_description) by extension 'colcon_pkg'
+[0.138s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_description) by extensions ['colcon_meta']
+[0.138s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_description) by extension 'colcon_meta'
+[0.138s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_description) by extensions ['ros']
+[0.138s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_description) by extension 'ros'
+[0.139s] DEBUG:colcon.colcon_core.package_identification:Package 'src/mir_robot/mir_description' with type 'ros.catkin' and name 'mir_description'
+[0.139s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_driver) by extensions ['ignore', 'ignore_ament_install']
+[0.139s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_driver) by extension 'ignore'
+[0.139s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_driver) by extension 'ignore_ament_install'
+[0.139s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_driver) by extensions ['colcon_pkg']
+[0.139s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_driver) by extension 'colcon_pkg'
+[0.139s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_driver) by extensions ['colcon_meta']
+[0.139s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_driver) by extension 'colcon_meta'
+[0.139s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_driver) by extensions ['ros']
+[0.139s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_driver) by extension 'ros'
+[0.139s] DEBUG:colcon.colcon_core.package_identification:Package 'src/mir_robot/mir_driver' with type 'ros.catkin' and name 'mir_driver'
+[0.140s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_dwb_critics) by extensions ['ignore', 'ignore_ament_install']
+[0.140s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_dwb_critics) by extension 'ignore'
+[0.140s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_dwb_critics) by extension 'ignore_ament_install'
+[0.140s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_dwb_critics) by extensions ['colcon_pkg']
+[0.140s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_dwb_critics) by extension 'colcon_pkg'
+[0.140s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_dwb_critics) by extensions ['colcon_meta']
+[0.140s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_dwb_critics) by extension 'colcon_meta'
+[0.140s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_dwb_critics) by extensions ['ros']
+[0.140s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_dwb_critics) by extension 'ros'
+[0.140s] DEBUG:colcon.colcon_core.package_identification:Package 'src/mir_robot/mir_dwb_critics' with type 'ros.catkin' and name 'mir_dwb_critics'
+[0.140s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_gazebo) by extensions ['ignore', 'ignore_ament_install']
+[0.140s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_gazebo) by extension 'ignore'
+[0.140s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_gazebo) by extension 'ignore_ament_install'
+[0.140s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_gazebo) by extensions ['colcon_pkg']
+[0.140s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_gazebo) by extension 'colcon_pkg'
+[0.140s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_gazebo) by extensions ['colcon_meta']
+[0.140s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_gazebo) by extension 'colcon_meta'
+[0.140s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_gazebo) by extensions ['ros']
+[0.140s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_gazebo) by extension 'ros'
+[0.141s] DEBUG:colcon.colcon_core.package_identification:Package 'src/mir_robot/mir_gazebo' with type 'ros.catkin' and name 'mir_gazebo'
+[0.141s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_msgs) by extensions ['ignore', 'ignore_ament_install']
+[0.141s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_msgs) by extension 'ignore'
+[0.141s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_msgs) by extension 'ignore_ament_install'
+[0.141s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_msgs) by extensions ['colcon_pkg']
+[0.141s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_msgs) by extension 'colcon_pkg'
+[0.141s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_msgs) by extensions ['colcon_meta']
+[0.141s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_msgs) by extension 'colcon_meta'
+[0.141s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_msgs) by extensions ['ros']
+[0.141s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_msgs) by extension 'ros'
+[0.141s] DEBUG:colcon.colcon_core.package_identification:Package 'src/mir_robot/mir_msgs' with type 'ros.catkin' and name 'mir_msgs'
+[0.141s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_navigation) by extensions ['ignore', 'ignore_ament_install']
+[0.141s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_navigation) by extension 'ignore'
+[0.141s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_navigation) by extension 'ignore_ament_install'
+[0.141s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_navigation) by extensions ['colcon_pkg']
+[0.141s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_navigation) by extension 'colcon_pkg'
+[0.141s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_navigation) by extensions ['colcon_meta']
+[0.141s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_navigation) by extension 'colcon_meta'
+[0.141s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_navigation) by extensions ['ros']
+[0.141s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_navigation) by extension 'ros'
+[0.142s] DEBUG:colcon.colcon_core.package_identification:Package 'src/mir_robot/mir_navigation' with type 'ros.catkin' and name 'mir_navigation'
+[0.142s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_robot) by extensions ['ignore', 'ignore_ament_install']
+[0.142s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_robot) by extension 'ignore'
+[0.142s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_robot) by extension 'ignore_ament_install'
+[0.142s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_robot) by extensions ['colcon_pkg']
+[0.142s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_robot) by extension 'colcon_pkg'
+[0.142s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_robot) by extensions ['colcon_meta']
+[0.142s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_robot) by extension 'colcon_meta'
+[0.142s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_robot) by extensions ['ros']
+[0.142s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/mir_robot) by extension 'ros'
+[0.142s] DEBUG:colcon.colcon_core.package_identification:Package 'src/mir_robot/mir_robot' with type 'ros.catkin' and name 'mir_robot'
+[0.142s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/sdc21x0) by extensions ['ignore', 'ignore_ament_install']
+[0.142s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/sdc21x0) by extension 'ignore'
+[0.142s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/sdc21x0) by extension 'ignore_ament_install'
+[0.142s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/sdc21x0) by extensions ['colcon_pkg']
+[0.142s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/sdc21x0) by extension 'colcon_pkg'
+[0.142s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/sdc21x0) by extensions ['colcon_meta']
+[0.142s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/sdc21x0) by extension 'colcon_meta'
+[0.142s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/sdc21x0) by extensions ['ros']
+[0.142s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/sdc21x0) by extension 'ros'
+[0.142s] DEBUG:colcon.colcon_core.package_identification:Package 'src/mir_robot/sdc21x0' with type 'ros.catkin' and name 'sdc21x0'
+[0.142s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/tm) by extensions ['ignore', 'ignore_ament_install']
+[0.142s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/tm) by extension 'ignore'
+[0.142s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/tm) by extension 'ignore_ament_install'
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/tm) by extensions ['colcon_pkg']
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/tm) by extension 'colcon_pkg'
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/tm) by extensions ['colcon_meta']
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/tm) by extension 'colcon_meta'
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/tm) by extensions ['ros']
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/tm) by extension 'ros'
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/tm) by extensions ['cmake', 'python']
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/tm) by extension 'cmake'
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/tm) by extension 'python'
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/tm) by extensions ['python_setup_py']
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/tm) by extension 'python_setup_py'
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/tm/rviz) by extensions ['ignore', 'ignore_ament_install']
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/tm/rviz) by extension 'ignore'
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/tm/rviz) by extension 'ignore_ament_install'
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/tm/rviz) by extensions ['colcon_pkg']
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/tm/rviz) by extension 'colcon_pkg'
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/tm/rviz) by extensions ['colcon_meta']
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/tm/rviz) by extension 'colcon_meta'
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/tm/rviz) by extensions ['ros']
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/tm/rviz) by extension 'ros'
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/tm/rviz) by extensions ['cmake', 'python']
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/tm/rviz) by extension 'cmake'
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/tm/rviz) by extension 'python'
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/tm/rviz) by extensions ['python_setup_py']
+[0.143s] Level 1:colcon.colcon_core.package_identification:_identify(src/mir_robot/tm/rviz) by extension 'python_setup_py'
+[0.143s] Level 1:colcon.colcon_core.package_discovery:discover_packages(recursive) using defaults
+[0.143s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) discover
+[0.143s] Level 1:colcon.colcon_core.package_discovery:discover_packages(ignore) using defaults
+[0.143s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) discover
+[0.143s] Level 1:colcon.colcon_core.package_discovery:discover_packages(path) using defaults
+[0.154s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) check parameters
+[0.154s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) discover
+[0.155s] DEBUG:colcon.colcon_installed_package_information.package_discovery:Found 480 installed packages in /opt/ros/humble
+[0.156s] Level 1:colcon.colcon_core.package_discovery:discover_packages(prefix_path) using defaults
+[0.177s] Level 5:colcon.colcon_core.verb:set package 'mir_description' build argument 'cmake_args' from command line to 'None'
+[0.177s] Level 5:colcon.colcon_core.verb:set package 'mir_description' build argument 'cmake_target' from command line to 'None'
+[0.177s] Level 5:colcon.colcon_core.verb:set package 'mir_description' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.177s] Level 5:colcon.colcon_core.verb:set package 'mir_description' build argument 'cmake_clean_cache' from command line to 'False'
+[0.177s] Level 5:colcon.colcon_core.verb:set package 'mir_description' build argument 'cmake_clean_first' from command line to 'False'
+[0.177s] Level 5:colcon.colcon_core.verb:set package 'mir_description' build argument 'cmake_force_configure' from command line to 'False'
+[0.177s] Level 5:colcon.colcon_core.verb:set package 'mir_description' build argument 'ament_cmake_args' from command line to 'None'
+[0.177s] Level 5:colcon.colcon_core.verb:set package 'mir_description' build argument 'catkin_cmake_args' from command line to 'None'
+[0.177s] Level 5:colcon.colcon_core.verb:set package 'mir_description' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.177s] DEBUG:colcon.colcon_core.verb:Building package 'mir_description' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/tuanminh/mir_project/build/mir_description', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/tuanminh/mir_project/install/mir_description', 'merge_install': False, 'path': '/home/tuanminh/mir_project/src/mir_robot/mir_description', 'symlink_install': False, 'test_result_base': None}
+[0.178s] Level 5:colcon.colcon_core.verb:set package 'mir_dwb_critics' build argument 'cmake_args' from command line to 'None'
+[0.178s] Level 5:colcon.colcon_core.verb:set package 'mir_dwb_critics' build argument 'cmake_target' from command line to 'None'
+[0.178s] Level 5:colcon.colcon_core.verb:set package 'mir_dwb_critics' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.178s] Level 5:colcon.colcon_core.verb:set package 'mir_dwb_critics' build argument 'cmake_clean_cache' from command line to 'False'
+[0.178s] Level 5:colcon.colcon_core.verb:set package 'mir_dwb_critics' build argument 'cmake_clean_first' from command line to 'False'
+[0.178s] Level 5:colcon.colcon_core.verb:set package 'mir_dwb_critics' build argument 'cmake_force_configure' from command line to 'False'
+[0.178s] Level 5:colcon.colcon_core.verb:set package 'mir_dwb_critics' build argument 'ament_cmake_args' from command line to 'None'
+[0.178s] Level 5:colcon.colcon_core.verb:set package 'mir_dwb_critics' build argument 'catkin_cmake_args' from command line to 'None'
+[0.178s] Level 5:colcon.colcon_core.verb:set package 'mir_dwb_critics' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.178s] DEBUG:colcon.colcon_core.verb:Building package 'mir_dwb_critics' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/tuanminh/mir_project/build/mir_dwb_critics', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/tuanminh/mir_project/install/mir_dwb_critics', 'merge_install': False, 'path': '/home/tuanminh/mir_project/src/mir_robot/mir_dwb_critics', 'symlink_install': False, 'test_result_base': None}
+[0.178s] Level 5:colcon.colcon_core.verb:set package 'mir_msgs' build argument 'cmake_args' from command line to 'None'
+[0.178s] Level 5:colcon.colcon_core.verb:set package 'mir_msgs' build argument 'cmake_target' from command line to 'None'
+[0.178s] Level 5:colcon.colcon_core.verb:set package 'mir_msgs' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.178s] Level 5:colcon.colcon_core.verb:set package 'mir_msgs' build argument 'cmake_clean_cache' from command line to 'False'
+[0.178s] Level 5:colcon.colcon_core.verb:set package 'mir_msgs' build argument 'cmake_clean_first' from command line to 'False'
+[0.178s] Level 5:colcon.colcon_core.verb:set package 'mir_msgs' build argument 'cmake_force_configure' from command line to 'False'
+[0.178s] Level 5:colcon.colcon_core.verb:set package 'mir_msgs' build argument 'ament_cmake_args' from command line to 'None'
+[0.178s] Level 5:colcon.colcon_core.verb:set package 'mir_msgs' build argument 'catkin_cmake_args' from command line to 'None'
+[0.178s] Level 5:colcon.colcon_core.verb:set package 'mir_msgs' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.178s] DEBUG:colcon.colcon_core.verb:Building package 'mir_msgs' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/tuanminh/mir_project/build/mir_msgs', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/tuanminh/mir_project/install/mir_msgs', 'merge_install': False, 'path': '/home/tuanminh/mir_project/src/mir_robot/mir_msgs', 'symlink_install': False, 'test_result_base': None}
+[0.178s] Level 5:colcon.colcon_core.verb:set package 'sdc21x0' build argument 'cmake_args' from command line to 'None'
+[0.178s] Level 5:colcon.colcon_core.verb:set package 'sdc21x0' build argument 'cmake_target' from command line to 'None'
+[0.178s] Level 5:colcon.colcon_core.verb:set package 'sdc21x0' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.178s] Level 5:colcon.colcon_core.verb:set package 'sdc21x0' build argument 'cmake_clean_cache' from command line to 'False'
+[0.178s] Level 5:colcon.colcon_core.verb:set package 'sdc21x0' build argument 'cmake_clean_first' from command line to 'False'
+[0.178s] Level 5:colcon.colcon_core.verb:set package 'sdc21x0' build argument 'cmake_force_configure' from command line to 'False'
+[0.178s] Level 5:colcon.colcon_core.verb:set package 'sdc21x0' build argument 'ament_cmake_args' from command line to 'None'
+[0.178s] Level 5:colcon.colcon_core.verb:set package 'sdc21x0' build argument 'catkin_cmake_args' from command line to 'None'
+[0.178s] Level 5:colcon.colcon_core.verb:set package 'sdc21x0' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.178s] DEBUG:colcon.colcon_core.verb:Building package 'sdc21x0' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/tuanminh/mir_project/build/sdc21x0', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/tuanminh/mir_project/install/sdc21x0', 'merge_install': False, 'path': '/home/tuanminh/mir_project/src/mir_robot/sdc21x0', 'symlink_install': False, 'test_result_base': None}
+[0.178s] Level 5:colcon.colcon_core.verb:set package 'mir_actions' build argument 'cmake_args' from command line to 'None'
+[0.178s] Level 5:colcon.colcon_core.verb:set package 'mir_actions' build argument 'cmake_target' from command line to 'None'
+[0.178s] Level 5:colcon.colcon_core.verb:set package 'mir_actions' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.178s] Level 5:colcon.colcon_core.verb:set package 'mir_actions' build argument 'cmake_clean_cache' from command line to 'False'
+[0.178s] Level 5:colcon.colcon_core.verb:set package 'mir_actions' build argument 'cmake_clean_first' from command line to 'False'
+[0.178s] Level 5:colcon.colcon_core.verb:set package 'mir_actions' build argument 'cmake_force_configure' from command line to 'False'
+[0.178s] Level 5:colcon.colcon_core.verb:set package 'mir_actions' build argument 'ament_cmake_args' from command line to 'None'
+[0.178s] Level 5:colcon.colcon_core.verb:set package 'mir_actions' build argument 'catkin_cmake_args' from command line to 'None'
+[0.178s] Level 5:colcon.colcon_core.verb:set package 'mir_actions' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.178s] DEBUG:colcon.colcon_core.verb:Building package 'mir_actions' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/tuanminh/mir_project/build/mir_actions', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/tuanminh/mir_project/install/mir_actions', 'merge_install': False, 'path': '/home/tuanminh/mir_project/src/mir_robot/mir_actions', 'symlink_install': False, 'test_result_base': None}
+[0.178s] Level 5:colcon.colcon_core.verb:set package 'mir_driver' build argument 'cmake_args' from command line to 'None'
+[0.178s] Level 5:colcon.colcon_core.verb:set package 'mir_driver' build argument 'cmake_target' from command line to 'None'
+[0.178s] Level 5:colcon.colcon_core.verb:set package 'mir_driver' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.178s] Level 5:colcon.colcon_core.verb:set package 'mir_driver' build argument 'cmake_clean_cache' from command line to 'False'
+[0.178s] Level 5:colcon.colcon_core.verb:set package 'mir_driver' build argument 'cmake_clean_first' from command line to 'False'
+[0.178s] Level 5:colcon.colcon_core.verb:set package 'mir_driver' build argument 'cmake_force_configure' from command line to 'False'
+[0.178s] Level 5:colcon.colcon_core.verb:set package 'mir_driver' build argument 'ament_cmake_args' from command line to 'None'
+[0.178s] Level 5:colcon.colcon_core.verb:set package 'mir_driver' build argument 'catkin_cmake_args' from command line to 'None'
+[0.178s] Level 5:colcon.colcon_core.verb:set package 'mir_driver' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.178s] DEBUG:colcon.colcon_core.verb:Building package 'mir_driver' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/tuanminh/mir_project/build/mir_driver', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/tuanminh/mir_project/install/mir_driver', 'merge_install': False, 'path': '/home/tuanminh/mir_project/src/mir_robot/mir_driver', 'symlink_install': False, 'test_result_base': None}
+[0.179s] Level 5:colcon.colcon_core.verb:set package 'mir_gazebo' build argument 'cmake_args' from command line to 'None'
+[0.179s] Level 5:colcon.colcon_core.verb:set package 'mir_gazebo' build argument 'cmake_target' from command line to 'None'
+[0.179s] Level 5:colcon.colcon_core.verb:set package 'mir_gazebo' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.179s] Level 5:colcon.colcon_core.verb:set package 'mir_gazebo' build argument 'cmake_clean_cache' from command line to 'False'
+[0.179s] Level 5:colcon.colcon_core.verb:set package 'mir_gazebo' build argument 'cmake_clean_first' from command line to 'False'
+[0.179s] Level 5:colcon.colcon_core.verb:set package 'mir_gazebo' build argument 'cmake_force_configure' from command line to 'False'
+[0.179s] Level 5:colcon.colcon_core.verb:set package 'mir_gazebo' build argument 'ament_cmake_args' from command line to 'None'
+[0.179s] Level 5:colcon.colcon_core.verb:set package 'mir_gazebo' build argument 'catkin_cmake_args' from command line to 'None'
+[0.179s] Level 5:colcon.colcon_core.verb:set package 'mir_gazebo' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.179s] DEBUG:colcon.colcon_core.verb:Building package 'mir_gazebo' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/tuanminh/mir_project/build/mir_gazebo', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/tuanminh/mir_project/install/mir_gazebo', 'merge_install': False, 'path': '/home/tuanminh/mir_project/src/mir_robot/mir_gazebo', 'symlink_install': False, 'test_result_base': None}
+[0.179s] Level 5:colcon.colcon_core.verb:set package 'mir_navigation' build argument 'cmake_args' from command line to 'None'
+[0.179s] Level 5:colcon.colcon_core.verb:set package 'mir_navigation' build argument 'cmake_target' from command line to 'None'
+[0.179s] Level 5:colcon.colcon_core.verb:set package 'mir_navigation' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.179s] Level 5:colcon.colcon_core.verb:set package 'mir_navigation' build argument 'cmake_clean_cache' from command line to 'False'
+[0.179s] Level 5:colcon.colcon_core.verb:set package 'mir_navigation' build argument 'cmake_clean_first' from command line to 'False'
+[0.179s] Level 5:colcon.colcon_core.verb:set package 'mir_navigation' build argument 'cmake_force_configure' from command line to 'False'
+[0.179s] Level 5:colcon.colcon_core.verb:set package 'mir_navigation' build argument 'ament_cmake_args' from command line to 'None'
+[0.179s] Level 5:colcon.colcon_core.verb:set package 'mir_navigation' build argument 'catkin_cmake_args' from command line to 'None'
+[0.179s] Level 5:colcon.colcon_core.verb:set package 'mir_navigation' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.179s] DEBUG:colcon.colcon_core.verb:Building package 'mir_navigation' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/tuanminh/mir_project/build/mir_navigation', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/tuanminh/mir_project/install/mir_navigation', 'merge_install': False, 'path': '/home/tuanminh/mir_project/src/mir_robot/mir_navigation', 'symlink_install': False, 'test_result_base': None}
+[0.179s] Level 5:colcon.colcon_core.verb:set package 'mir_robot' build argument 'cmake_args' from command line to 'None'
+[0.179s] Level 5:colcon.colcon_core.verb:set package 'mir_robot' build argument 'cmake_target' from command line to 'None'
+[0.179s] Level 5:colcon.colcon_core.verb:set package 'mir_robot' build argument 'cmake_target_skip_unavailable' from command line to 'False'
+[0.179s] Level 5:colcon.colcon_core.verb:set package 'mir_robot' build argument 'cmake_clean_cache' from command line to 'False'
+[0.179s] Level 5:colcon.colcon_core.verb:set package 'mir_robot' build argument 'cmake_clean_first' from command line to 'False'
+[0.179s] Level 5:colcon.colcon_core.verb:set package 'mir_robot' build argument 'cmake_force_configure' from command line to 'False'
+[0.179s] Level 5:colcon.colcon_core.verb:set package 'mir_robot' build argument 'ament_cmake_args' from command line to 'None'
+[0.179s] Level 5:colcon.colcon_core.verb:set package 'mir_robot' build argument 'catkin_cmake_args' from command line to 'None'
+[0.179s] Level 5:colcon.colcon_core.verb:set package 'mir_robot' build argument 'catkin_skip_building_tests' from command line to 'False'
+[0.179s] DEBUG:colcon.colcon_core.verb:Building package 'mir_robot' with the following arguments: {'ament_cmake_args': None, 'build_base': '/home/tuanminh/mir_project/build/mir_robot', 'catkin_cmake_args': None, 'catkin_skip_building_tests': False, 'cmake_args': None, 'cmake_clean_cache': False, 'cmake_clean_first': False, 'cmake_force_configure': False, 'cmake_target': None, 'cmake_target_skip_unavailable': False, 'install_base': '/home/tuanminh/mir_project/install/mir_robot', 'merge_install': False, 'path': '/home/tuanminh/mir_project/src/mir_robot/mir_robot', 'symlink_install': False, 'test_result_base': None}
+[0.179s] INFO:colcon.colcon_core.executor:Executing jobs using 'parallel' executor
+[0.180s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete
+[0.180s] INFO:colcon.colcon_ros.task.catkin.build:Building ROS package in '/home/tuanminh/mir_project/src/mir_robot/mir_msgs' with build type 'catkin'
+[0.180s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/home/tuanminh/mir_project/src/mir_robot/mir_msgs'
+[0.182s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_core.shell.bat': Not used on non-Windows systems
+[0.182s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.182s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.184s] INFO:colcon.colcon_ros.task.catkin.build:Building ROS package in '/home/tuanminh/mir_project/src/mir_robot/mir_description' with build type 'catkin'
+[0.184s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/home/tuanminh/mir_project/src/mir_robot/mir_description'
+[0.184s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.184s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.186s] INFO:colcon.colcon_ros.task.catkin.build:Building ROS package in '/home/tuanminh/mir_project/src/mir_robot/sdc21x0' with build type 'catkin'
+[0.186s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/home/tuanminh/mir_project/src/mir_robot/sdc21x0'
+[0.186s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.186s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.188s] INFO:colcon.colcon_ros.task.catkin.build:Building ROS package in '/home/tuanminh/mir_project/src/mir_robot/mir_dwb_critics' with build type 'catkin'
+[0.188s] INFO:colcon.colcon_cmake.task.cmake.build:Building CMake package in '/home/tuanminh/mir_project/src/mir_robot/mir_dwb_critics'
+[0.188s] INFO:colcon.colcon_core.shell:Skip shell extension 'powershell' for command environment: Not usable outside of PowerShell
+[0.188s] DEBUG:colcon.colcon_core.shell:Skip shell extension 'dsv' for command environment
+[0.192s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/tuanminh/mir_project/build/mir_msgs': /usr/bin/cmake /home/tuanminh/mir_project/src/mir_robot/mir_msgs -DCATKIN_INSTALL_INTO_PREFIX_ROOT=0 -DCMAKE_INSTALL_PREFIX=/home/tuanminh/mir_project/install/mir_msgs
+[0.193s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/tuanminh/mir_project/build/mir_description': /usr/bin/cmake /home/tuanminh/mir_project/src/mir_robot/mir_description -DCATKIN_INSTALL_INTO_PREFIX_ROOT=0 -DCMAKE_INSTALL_PREFIX=/home/tuanminh/mir_project/install/mir_description
+[0.194s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/tuanminh/mir_project/build/sdc21x0': /usr/bin/cmake /home/tuanminh/mir_project/src/mir_robot/sdc21x0 -DCATKIN_INSTALL_INTO_PREFIX_ROOT=0 -DCMAKE_INSTALL_PREFIX=/home/tuanminh/mir_project/install/sdc21x0
+[0.198s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoking command in '/home/tuanminh/mir_project/build/mir_dwb_critics': /usr/bin/cmake /home/tuanminh/mir_project/src/mir_robot/mir_dwb_critics -DCATKIN_INSTALL_INTO_PREFIX_ROOT=0 -DCMAKE_INSTALL_PREFIX=/home/tuanminh/mir_project/install/mir_dwb_critics
+[0.225s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/tuanminh/mir_project/build/sdc21x0' returned '1': /usr/bin/cmake /home/tuanminh/mir_project/src/mir_robot/sdc21x0 -DCATKIN_INSTALL_INTO_PREFIX_ROOT=0 -DCMAKE_INSTALL_PREFIX=/home/tuanminh/mir_project/install/sdc21x0
+[0.225s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/tuanminh/mir_project/build/mir_description' returned '1': /usr/bin/cmake /home/tuanminh/mir_project/src/mir_robot/mir_description -DCATKIN_INSTALL_INTO_PREFIX_ROOT=0 -DCMAKE_INSTALL_PREFIX=/home/tuanminh/mir_project/install/mir_description
+[0.226s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/tuanminh/mir_project/build/mir_dwb_critics' returned '1': /usr/bin/cmake /home/tuanminh/mir_project/src/mir_robot/mir_dwb_critics -DCATKIN_INSTALL_INTO_PREFIX_ROOT=0 -DCMAKE_INSTALL_PREFIX=/home/tuanminh/mir_project/install/mir_dwb_critics
+[0.227s] DEBUG:colcon.colcon_core.event_handler.log_command:Invoked command in '/home/tuanminh/mir_project/build/mir_msgs' returned '1': /usr/bin/cmake /home/tuanminh/mir_project/src/mir_robot/mir_msgs -DCATKIN_INSTALL_INTO_PREFIX_ROOT=0 -DCMAKE_INSTALL_PREFIX=/home/tuanminh/mir_project/install/mir_msgs
+[0.233s] Level 1:colcon.colcon_core.environment:create_environment_scripts_only(mir_dwb_critics)
+[0.235s] Level 1:colcon.colcon_core.environment:checking '/home/tuanminh/mir_project/install/mir_dwb_critics' for CMake module files
+[0.236s] Level 1:colcon.colcon_core.environment:checking '/home/tuanminh/mir_project/install/mir_dwb_critics' for CMake config files
+[0.236s] Level 1:colcon.colcon_core.environment:checking '/home/tuanminh/mir_project/install/mir_dwb_critics/bin'
+[0.236s] Level 1:colcon.colcon_core.environment:checking '/home/tuanminh/mir_project/install/mir_dwb_critics/lib/pkgconfig/mir_dwb_critics.pc'
+[0.236s] Level 1:colcon.colcon_core.environment:checking '/home/tuanminh/mir_project/install/mir_dwb_critics/lib/python3.10/site-packages'
+[0.236s] Level 1:colcon.colcon_core.environment:checking '/home/tuanminh/mir_project/install/mir_dwb_critics/bin'
+[0.236s] INFO:colcon.colcon_core.shell:Creating package script '/home/tuanminh/mir_project/install/mir_dwb_critics/share/mir_dwb_critics/package.ps1'
+[0.237s] INFO:colcon.colcon_core.shell:Creating package descriptor '/home/tuanminh/mir_project/install/mir_dwb_critics/share/mir_dwb_critics/package.dsv'
+[0.237s] INFO:colcon.colcon_core.shell:Creating package script '/home/tuanminh/mir_project/install/mir_dwb_critics/share/mir_dwb_critics/package.sh'
+[0.237s] INFO:colcon.colcon_core.shell:Creating package script '/home/tuanminh/mir_project/install/mir_dwb_critics/share/mir_dwb_critics/package.bash'
+[0.238s] INFO:colcon.colcon_core.shell:Creating package script '/home/tuanminh/mir_project/install/mir_dwb_critics/share/mir_dwb_critics/package.zsh'
+[0.238s] Level 1:colcon.colcon_core.environment:create_file_with_runtime_dependencies(/home/tuanminh/mir_project/install/mir_dwb_critics/share/colcon-core/packages/mir_dwb_critics)
+[0.249s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:closing loop
+[0.249s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:loop closed
+[0.249s] DEBUG:colcon.colcon_parallel_executor.executor.parallel:run_until_complete finished with '1'
+[0.249s] DEBUG:colcon.colcon_core.event_reactor:joining thread
+[0.253s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.terminal_notifier': Not used on non-Darwin systems
+[0.253s] INFO:colcon.colcon_core.plugin_system:Skipping extension 'colcon_notification.desktop_notification.win32': Not used on non-Windows systems
+[0.253s] INFO:colcon.colcon_notification.desktop_notification:Sending desktop notification using 'notify2'
+[0.265s] DEBUG:colcon.colcon_core.event_reactor:joined thread
+[0.266s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/tuanminh/mir_project/install/local_setup.ps1'
+[0.266s] INFO:colcon.colcon_core.shell:Creating prefix util module '/home/tuanminh/mir_project/install/_local_setup_util_ps1.py'
+[0.267s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/tuanminh/mir_project/install/setup.ps1'
+[0.268s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/tuanminh/mir_project/install/local_setup.sh'
+[0.268s] INFO:colcon.colcon_core.shell:Creating prefix util module '/home/tuanminh/mir_project/install/_local_setup_util_sh.py'
+[0.272s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/tuanminh/mir_project/install/setup.sh'
+[0.276s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/tuanminh/mir_project/install/local_setup.bash'
+[0.276s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/tuanminh/mir_project/install/setup.bash'
+[0.277s] INFO:colcon.colcon_core.shell:Creating prefix script '/home/tuanminh/mir_project/install/local_setup.zsh'
+[0.278s] INFO:colcon.colcon_core.shell:Creating prefix chain script '/home/tuanminh/mir_project/install/setup.zsh'

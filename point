@@ -1,0 +1,90 @@
+1) bep
+header: 
+  seq: 1
+  stamp: 
+    secs: 1772775198
+    nsecs: 717721359
+  frame_id: "map"
+pose: 
+  position: 
+    x: 5
+    y: 17.05
+    z: 0.0
+  orientation: 
+    x: 0.0
+    y: 0.0
+    z: 0.018329160145259454
+    w: 0.9998320068333327
+    90.000
+
+2) ban 1
+header: 
+  seq: 2
+  stamp: 
+    secs: 1772775269
+    nsecs: 418659726
+  frame_id: "map"
+pose: 
+  position: 
+    x: 6.900
+    y: 19.150
+    z: 0.0
+  orientation: 
+    x: 0.0
+    y: 0.0
+    z: 0
+    w: 0
+
+3) ban 2
+header: 
+  seq: 7
+  stamp: 
+    secs: 1772777216
+    nsecs: 694233102
+  frame_id: "map"
+pose: 
+  position: 
+    x: 6.200
+    y: 14.700
+    z: 0.0
+  orientation: 
+    x: 0.0
+    y: 0.0
+    z: 0
+    w: 0
+
+4) ban 3
+header: 
+  seq: 5
+  stamp: 
+    secs: 1772775538
+    nsecs:  91711235
+  frame_id: "map"
+pose: 
+  position: 
+    x: 14.550
+    y: 17.500
+    z: 0.0
+  orientation: 
+    x: 0.0
+    y: 0.0
+    z: 0
+    w: 0
+
+5) ban 4
+header: 
+  seq: 6
+  stamp: 
+    secs: 1772775558
+    nsecs: 447237764
+  frame_id: "map"
+pose: 
+  position: 
+    x: 14.800
+    y: 14.250
+    z: 0.0
+  orientation: 
+    x: 0.0
+    y: 0.0
+    z: -0.01166048111148338
+    w: 0.9999320142790953

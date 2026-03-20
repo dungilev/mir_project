@@ -1,0 +1,2 @@
+Invoking command in '/home/tuanminh/mir_project/build/sdc21x0': /usr/bin/cmake /home/tuanminh/mir_project/src/mir_robot/sdc21x0 -DCATKIN_INSTALL_INTO_PREFIX_ROOT=0 -DCMAKE_INSTALL_PREFIX=/home/tuanminh/mir_project/install/sdc21x0
+Invoked command in '/home/tuanminh/mir_project/build/sdc21x0' returned '1': /usr/bin/cmake /home/tuanminh/mir_project/src/mir_robot/sdc21x0 -DCATKIN_INSTALL_INTO_PREFIX_ROOT=0 -DCMAKE_INSTALL_PREFIX=/home/tuanminh/mir_project/install/sdc21x0

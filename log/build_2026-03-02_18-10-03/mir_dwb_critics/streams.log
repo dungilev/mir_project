@@ -1,0 +1,21 @@
+[0.010s] Invoking command in '/home/tuanminh/mir_project/build/mir_dwb_critics': /usr/bin/cmake /home/tuanminh/mir_project/src/mir_robot/mir_dwb_critics -DCATKIN_INSTALL_INTO_PREFIX_ROOT=0 -DCMAKE_INSTALL_PREFIX=/home/tuanminh/mir_project/install/mir_dwb_critics
+[0.033s] -- Configuring incomplete, errors occurred!
+[0.034s] See also "/home/tuanminh/mir_project/build/mir_dwb_critics/CMakeFiles/CMakeOutput.log".
+[0.035s] [31mCMake Error at CMakeLists.txt:6 (find_package):
+[0.035s]   By not providing "Findcatkin.cmake" in CMAKE_MODULE_PATH this project has
+[0.035s]   asked CMake to find a package configuration file provided by "catkin", but
+[0.035s]   CMake did not find one.
+[0.035s] 
+[0.035s]   Could not find a package configuration file provided by "catkin" with any
+[0.035s]   of the following names:
+[0.035s] 
+[0.035s]     catkinConfig.cmake
+[0.035s]     catkin-config.cmake
+[0.035s] 
+[0.036s]   Add the installation prefix of "catkin" to CMAKE_PREFIX_PATH or set
+[0.036s]   "catkin_DIR" to a directory containing one of the above files.  If "catkin"
+[0.036s]   provides a separate development package or SDK, be sure it has been
+[0.036s]   installed.
+[0.036s] 
+[0.036s] [0m
+[0.038s] Invoked command in '/home/tuanminh/mir_project/build/mir_dwb_critics' returned '1': /usr/bin/cmake /home/tuanminh/mir_project/src/mir_robot/mir_dwb_critics -DCATKIN_INSTALL_INTO_PREFIX_ROOT=0 -DCMAKE_INSTALL_PREFIX=/home/tuanminh/mir_project/install/mir_dwb_critics

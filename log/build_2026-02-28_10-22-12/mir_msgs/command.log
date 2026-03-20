@@ -1,0 +1,2 @@
+Invoking command in '/home/tuanminh/mir_project/build/mir_msgs': /usr/bin/cmake /home/tuanminh/mir_project/src/mir_robot/mir_msgs -DCATKIN_INSTALL_INTO_PREFIX_ROOT=0 -DCMAKE_INSTALL_PREFIX=/home/tuanminh/mir_project/install/mir_msgs
+Invoked command in '/home/tuanminh/mir_project/build/mir_msgs' returned '1': /usr/bin/cmake /home/tuanminh/mir_project/src/mir_robot/mir_msgs -DCATKIN_INSTALL_INTO_PREFIX_ROOT=0 -DCMAKE_INSTALL_PREFIX=/home/tuanminh/mir_project/install/mir_msgs
