@@ -38,6 +38,22 @@ RUN apt-get update && apt-get install -y \
     python3-websocket \
     && rm -rf /var/lib/apt/lists/*
 
+ENV PIP_DEFAULT_TIMEOUT=300
+ENV PIP_RETRIES=20
+
+# Cài pip mới + wheel tools để giảm lỗi resolver/download khi build
+RUN python3 -m pip install --no-cache-dir --upgrade pip setuptools wheel
+
+# Cài torch CUDA để Ultralytics/YOLO chạy GPU trong container
+RUN python3 -m pip install --no-cache-dir \
+    --index-url https://download.pytorch.org/whl/cu121 \
+    torch==2.4.1 \
+    torchvision==0.19.1
+
+# Base image co the da co psutil (distutils), can cai de bang ignore-installed
+# de tranh loi "Cannot uninstall psutil ... distutils installed project".
+RUN python3 -m pip install --no-cache-dir --ignore-installed psutil==7.2.2
+
 RUN python3 -m pip install --no-cache-dir \
     numpy \
     sherpa-onnx \
@@ -45,6 +61,8 @@ RUN python3 -m pip install --no-cache-dir \
     pygame \
     gTTS \
     ultralytics \
+    mediapipe==0.10.10 \
+    pyrealsense2==2.54.1.5216 \
     onnxruntime-gpu==1.16.3 \
     opencv-python
 

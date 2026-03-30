@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Màn hình Bếp - Robot MiR</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="./vendor/roslib.min.js"></script>
+</head>
+<body class="h-screen overflow-hidden text-slate-800 relative" style="font-family: 'Noto Sans', 'Segoe UI', Roboto, Arial, sans-serif;">
+  <!-- Nền giống hệt index.html -->
+  <div class="fixed inset-0 z-0 bg-center bg-cover" style="background-image: url('./assets/nen.png'); filter: saturate(65%) brightness(88%);"></div>
+  <div class="fixed inset-0 z-0 bg-white/55"></div>
+
+  <div class="relative z-10 w-full max-w-[1800px] mx-auto p-0 h-screen flex flex-col">
+    <!-- HEADER GIỐNG HỆT INDEX -->
+    <header class="bg-[#a30f2d] border-b border-[#a30f2d] px-5 md:px-7 py-4 md:py-5">
+      <div class="flex items-start justify-between gap-4 md:gap-5">
+        <div class="flex items-center gap-4 md:gap-5">
+          <img src="./assets/logo.png" alt="Logo HUST" class="w-16 h-16 md:w-24 md:h-24 object-contain" />
+          <div>
+            <h1 class="text-2xl md:text-4xl font-extrabold tracking-tight text-white">HUST - Bảng Điều Phối Nhà Bếp</h1>
+            <p class="text-base md:text-lg font-semibold text-rose-100 mt-1">Hệ thống điều khiển Robot MiR</p>
+          </div>
+        </div>
+
+        <div class="flex flex-col items-end gap-2">
+          <div id="ros-status" class="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-slate-200 text-slate-700 text-sm md:text-base font-semibold whitespace-nowrap">
+            <span id="ros-status-dot" class="w-2.5 h-2.5 rounded-full bg-slate-500"></span>
+            <span id="ros-status-text">Chưa kết nối ROSBridge</span>
+          </div>
+          <!-- Bổ sung nút Gọi Xe ngay dưới status -->
+          <button onclick="callRobotToKitchen()" class="mt-1 px-4 py-2 bg-yellow-400 hover:bg-yellow-300 text-[#a30f2d] text-sm md:text-base font-bold rounded-full shadow-md transition-all flex items-center gap-2 border border-yellow-500">
+            <span>🤖</span> GỌI ROBOT VỀ BẾP
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- TRỤC CHÍNH -->
+    <main class="grid lg:grid-cols-12 gap-0 flex-1 min-h-0">
+      
+      <!-- CỘT TRÁI: DANH SÁCH ĐƠN HÀNG (Giống phần Danh mục của index) -->
+      <section class="lg:col-span-8 bg-white/12 border-r border-white/30 p-4 md:p-5 h-full flex flex-col min-h-0 backdrop-blur-[1px]">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl md:text-2xl font-bold text-[#2f3f58]">Đơn hàng cần làm</h2>
+          <span id="order-count" class="bg-[#a30f2d] text-white px-3 py-1 rounded-full text-sm font-bold">0 đơn</span>
+        </div>
+        
+        <div id="orders-container" class="flex-1 overflow-y-auto space-y-4 pr-2">
+          <!-- Đơn hàng sẽ được append vào đây -->
+          <div id="empty-state" class="w-full h-full flex flex-col items-center justify-center text-[#2f3f58]/50">
+            <span class="text-6xl mb-4">🍽️</span>
+            <p class="text-xl font-bold">Chưa có đơn hàng nào</p>
+            <p class="text-base text-[#6a7485]">Đơn hàng mới từ khách sẽ hiện ở đây...</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- CỘT PHẢI: ĐIỀU PHỐI GIAO HÀNG (Giống phần Giỏ hàng của index) -->
+      <aside class="lg:col-span-4 bg-white p-4 md:p-5 h-full flex flex-col min-h-0 border-l border-[#d8dee8]">
+        <h2 class="text-xl md:text-2xl font-bold text-[#2f3f58]">Điều phối Giao hàng</h2>
+        <p class="text-sm text-[#6a7485] mt-1 mb-4">Chất đồ lên xe, chọn bàn và ấn Giao.</p>
+
+        <div class="flex-1 overflow-y-auto pr-1 flex flex-col gap-4">
+          <label class="block text-[#2f3f58] text-base font-bold">Chọn bàn cần giao:</label>
+          <div class="grid grid-cols-2 gap-3">
+            <button onclick="selectDeliveryTable(1)" id="btn-table-1" class="delivery-btn border border-[#d8dee8] rounded-xl py-4 bg-white text-lg font-bold text-[#2f3f58] hover:bg-[#f7f9fc]">Bàn 1</button>
+            <button onclick="selectDeliveryTable(2)" id="btn-table-2" class="delivery-btn border border-[#d8dee8] rounded-xl py-4 bg-white text-lg font-bold text-[#2f3f58] hover:bg-[#f7f9fc]">Bàn 2</button>
+            <button onclick="selectDeliveryTable(3)" id="btn-table-3" class="delivery-btn border border-[#d8dee8] rounded-xl py-4 bg-white text-lg font-bold text-[#2f3f58] hover:bg-[#f7f9fc]">Bàn 3</button>
+            <button onclick="selectDeliveryTable(4)" id="btn-table-4" class="delivery-btn border border-[#d8dee8] rounded-xl py-4 bg-white text-lg font-bold text-[#2f3f58] hover:bg-[#f7f9fc]">Bàn 4</button>
+          </div>
+
+          <div class="mt-auto border-t border-[#d8dee8] pt-4">
+            <div id="delivery-status" class="text-center font-semibold text-[#6a7485] mb-3 h-6">Chưa chọn bàn giao</div>
+            <button id="btn-deliver" onclick="dispatchRobot()" disabled class="w-full py-4 rounded-xl bg-slate-300 text-slate-500 text-lg font-bold transition-all disabled:cursor-not-allowed">
+              GIAO HÀNG ĐI
+            </button>
+          </div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <script>
+    function resolveRosUrls() {
+      const urls = [];
+      const pushUnique = (url) => { if (url && !urls.includes(url)) urls.push(url); };
+      const host = window.location.hostname;
+      if (host) {
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+        pushUnique(`${wsProtocol}://${host}:9090`);
+        if (wsProtocol !== 'ws') pushUnique(`ws://${host}:9090`);
+      }
+      pushUnique('ws://localhost:9090');
+      pushUnique('ws://127.0.0.1:9090');
+      pushUnique('ws://192.168.0.102:9090');
+      return urls;
+    }
+
+    const ROS_URLS = resolveRosUrls();
+    let ros = null;
+    let kitchenCommandTopic = null;
+    let robotOrdersSub = null;
+    let rosConnected = false;
+    let rosUrlIndex = 0;
+
+    function setStatus(text, type = 'idle') {
+      const el = document.getElementById('ros-status');
+      const dotEl = document.getElementById('ros-status-dot');
+      const textEl = document.getElementById('ros-status-text');
+      if (!el) return;
+      textEl.textContent = text;
+      
+      el.className = 'inline-flex items-center gap-2 px-3 py-2 rounded-full text-sm md:text-base font-semibold whitespace-nowrap';
+      
+      if (type === 'ok') {
+        el.classList.add('bg-emerald-100', 'text-emerald-700');
+        dotEl.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500';
+      } else if (type === 'err') {
+        el.classList.add('bg-[#fde8ee]', 'text-[#a30f2d]');
+        dotEl.className = 'w-2.5 h-2.5 rounded-full bg-[#a30f2d]';
+      } else {
+        el.classList.add('bg-slate-200', 'text-slate-700');
+        dotEl.className = 'w-2.5 h-2.5 rounded-full bg-slate-500';
+      }
+    }
+
+    function connectRos() {
+      const url = ROS_URLS[rosUrlIndex % ROS_URLS.length];
+      if (!window.ROSLIB) {
+        setStatus('Thiếu roslibjs', 'err');
+        return;
+      }
+
+      try {
+        if (ros) ros.close();
+        setStatus(`Đang kết nối ROSBridge...`);
+
+        ros = new ROSLIB.Ros({ url });
+        
+        ros.on('connection', () => {
+          rosConnected = true;
+          setStatus(`Đã kết nối ROSBridge`, 'ok');
+          setupTopics();
+        });
+        
+        ros.on('error', () => {
+          rosConnected = false;
+          setStatus(`Lỗi kết nối`, 'err');
+          setTimeout(() => {
+            rosUrlIndex++;
+            connectRos();
+          }, 3000);
+        });
+        
+        ros.on('close', () => {
+          rosConnected = false;
+          setStatus(`Đã ngắt kết nối`, 'err');
+        });
+
+      } catch (e) {
+        rosConnected = false;
+        setStatus('Không thể khởi tạo ROS', 'err');
+      }
+    }
+
+    function setupTopics() {
+      kitchenCommandTopic = new ROSLIB.Topic({
+        ros: ros,
+        name: '/kitchen_commands',
+        messageType: 'std_msgs/String'
+      });
+
+      robotOrdersSub = new ROSLIB.Topic({
+        ros: ros,
+        name: '/robot_orders',
+        messageType: 'std_msgs/String'
+      });
+
+      robotOrdersSub.subscribe((msg) => {
+        try {
+          const order = JSON.parse(msg.data);
+          addOrderToUI(order);
+        } catch(e) { console.error("Lỗi parse đơn hàng", e); }
+      });
+    }
+
+    // --- LOGIC GIAO DIỆN BẾP ---
+    let pendingOrdersCount = 0;
+    
+    function addOrderToUI(order) {
+      const container = document.getElementById('orders-container');
+      const emptyState = document.getElementById('empty-state');
+      if (emptyState) emptyState.style.display = 'none';
+
+      pendingOrdersCount++;
+      document.getElementById('order-count').textContent = `${pendingOrdersCount} đơn`;
+
+      // Nhóm số lượng giống index.html
+      const itemCounts = {};
+      order.danh_sach_mon.forEach(item => {
+        itemCounts[item] = (itemCounts[item] || 0) + 1;
+      });
+      
+      const itemsListItems = Object.entries(itemCounts).map(([name, qty]) => 
+        `<li class="flex justify-between border-b border-dashed border-[#d8dee8] last:border-0 py-1">
+           <span class="text-[#2f3f58] font-medium">• ${name}</span>
+           <span class="text-[#a30f2d] font-bold">x${qty}</span>
+         </li>`
+      ).join('');
+
+      const orderCardId = `order-${Date.now()}`;
+
+      const orderHTML = `
+        <div id="${orderCardId}" class="bg-white border rounded-xl p-4 border-[#d8dee8] shadow-sm flex justify-between items-stretch">
+          <div class="flex-1">
+            <div class="flex items-center gap-3">
+              <span class="bg-[#c21734] text-white px-3 py-1 rounded text-sm font-bold tracking-wider">BÀN ${order.ban}</span>
+              <span class="text-[#6a7485] font-semibold text-sm">Tổng: ${money(order.tong_tien)}</span>
+            </div>
+            <ul class="mt-3 text-lg leading-tight px-1">
+              ${itemsListItems}
+            </ul>
+          </div>
+          <div class="ml-4 flex items-center">
+            <button onclick="finishOrder('${orderCardId}', ${order.ban})" class="h-full px-5 rounded-xl bg-[#2f3f58] text-white font-bold hover:bg-[#1e2a3b] transition-colors whitespace-nowrap">
+              Nấu Xong ✓
+            </button>
+          </div>
+        </div>
+      `;
+
+      container.insertAdjacentHTML('afterbegin', orderHTML);
+    }
+
+    function finishOrder(cardId, tableNo) {
+      const card = document.getElementById(cardId);
+      if (card) {
+        card.style.opacity = '0.5';
+        setTimeout(() => card.remove(), 300);
+      }
+      
+      pendingOrdersCount = Math.max(0, pendingOrdersCount - 1);
+      document.getElementById('order-count').textContent = `${pendingOrdersCount} đơn`;
+      
+      if (pendingOrdersCount === 0) {
+        document.getElementById('empty-state').style.display = 'flex';
+      }
+
+      selectDeliveryTable(tableNo);
+    }
+
+    function money(v) { return v.toLocaleString('vi-VN') + 'đ'; }
+
+    // --- LOGIC ĐIỀU PHỐI ROBOT ---
+    let selectedTable = null;
+
+    function selectDeliveryTable(tableNo) {
+      selectedTable = tableNo;
+      
+      // Reset
+      document.querySelectorAll('.delivery-btn').forEach(btn => {
+        btn.className = 'delivery-btn border border-[#d8dee8] rounded-xl py-4 bg-white text-lg font-bold text-[#2f3f58] hover:bg-[#f7f9fc]';
+      });
+
+      // Highlight - style chuẩn giống tông index
+      const activeBtn = document.getElementById(`btn-table-${tableNo}`);
+      if (activeBtn) {
+        activeBtn.className = 'delivery-btn border-2 border-[#a30f2d] rounded-xl py-4 bg-rose-50 text-lg font-bold text-[#a30f2d] shadow-sm';
+      }
+
+      document.getElementById('delivery-status').textContent = `Đã chọn: Bàn ${tableNo}`;
+      document.getElementById('delivery-status').className = 'text-center font-bold text-[#a30f2d] mb-3 h-6 text-lg';
+      
+      const btnDeliver = document.getElementById('btn-deliver');
+      btnDeliver.disabled = false;
+      btnDeliver.className = 'w-full py-4 rounded-xl bg-[#c21734] text-white text-lg font-bold hover:bg-[#a30f2d] shadow-sm';
+    }
+
+    function callRobotToKitchen() {
+      if (!rosConnected || !kitchenCommandTopic) {
+        alert("Chưa kết nối đến Robot!");
+        return;
+      }
+
+      const msg = new ROSLIB.Message({
+        data: JSON.stringify({ action: "call_robot" })
+      });
+      kitchenCommandTopic.publish(msg);
+      
+      const btn = document.querySelector('button[onclick="callRobotToKitchen()"]');
+      const originText = btn.innerHTML;
+      btn.innerHTML = `<span>⏳</span> ĐANG GỌI...`;
+      setTimeout(() => btn.innerHTML = originText, 3000);
+    }
+
+    function dispatchRobot() {
+      if (!rosConnected || !kitchenCommandTopic || !selectedTable) return;
+
+      const msg = new ROSLIB.Message({
+        data: JSON.stringify({ action: "deliver", table: selectedTable.toString() })
+      });
+      kitchenCommandTopic.publish(msg);
+
+      const btnDeliver = document.getElementById('btn-deliver');
+      btnDeliver.innerHTML = `ĐANG CHẠY ĐẾN BÀN ${selectedTable}...`;
+      btnDeliver.className = 'w-full py-4 rounded-xl bg-slate-500 text-white text-lg font-bold opacity-80 cursor-not-allowed';
+      btnDeliver.disabled = true;
+
+      setTimeout(() => {
+        selectedTable = null;
+        document.querySelectorAll('.delivery-btn').forEach(btn => {
+          btn.className = 'delivery-btn border border-[#d8dee8] rounded-xl py-4 bg-white text-lg font-bold text-[#2f3f58] hover:bg-[#f7f9fc]';
+        });
+        
+        document.getElementById('delivery-status').textContent = 'Chưa chọn bàn giao';
+        document.getElementById('delivery-status').className = 'text-center font-semibold text-[#6a7485] mb-3 h-6';
+        
+        btnDeliver.innerHTML = `GIAO HÀNG ĐI`;
+        btnDeliver.className = 'w-full py-4 rounded-xl bg-slate-300 text-slate-500 text-lg font-bold disabled:cursor-not-allowed';
+      }, 3000);
+    }
+
+    connectRos();
+  </script>
+</body>
+</html>

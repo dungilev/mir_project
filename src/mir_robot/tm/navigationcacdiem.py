@@ -1,3 +1,15 @@
+
+def api_find_charge_mission(headers):
+    try:
+        r = requests.get(f"{API_URL}/missions", headers=headers, timeout=5)
+        missions = r.json()
+    except Exception:
+        return None
+    for m in missions:
+        name = m.get("name", "").lower()
+        if "charge" in name or "sac" in name or "docking" in name:
+            return m.get("guid")
+    return None
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
@@ -39,7 +51,7 @@ except ImportError:
 MIR_IP = "192.168.0.177"
 MIR_PORT = 9090
 TIMEOUT = 120       # giây
-ARRIVE_DIST = 0.5   # mét - coi như đã đến
+ARRIVE_DIST = 0.5   # mặc định nếu điểm không khai báo riêng
 
 # REST API
 API_URL = f"http://{MIR_IP}/api/v2.0.0"
@@ -52,12 +64,21 @@ CREDENTIALS = [
 
 # ── Các điểm đích ──
 DIEM = {
-    "bep":   {"x": 5.5,  "y": 17.05, "qz": 0.707, "qw": 0.707},  # 90 độ
-    "ban 1": {"x": 6.900,  "y": 19.150, "qz": 0, "qw": 1},
-    "ban 2": {"x": 6.200,  "y": 14.700, "qz": 0, "qw": 1},
-    "ban 3": {"x": 14.550, "y": 17.500, "qz": 0, "qw": 1},
-    "ban 4": {"x": 14.800, "y": 14.250, "qz": 0, "qw": 1},
+    "sac":   {"x": 21.950, "y": 15.600, "qz": 0, "qw": 1, "arrive_dist": 0.5},
+    "bep":   {"x": 5.5,  "y": 17.05, "qz": 0.707, "qw": 0.707, "arrive_dist": 1.0},
+    "ban 1": {"x": 6.900,  "y": 19.150, "qz": 0, "qw": 1, "arrive_dist": 0.9},
+    "ban 2": {"x": 6.200,  "y": 14.700, "qz": 0, "qw": 1, "arrive_dist": 0.9},
+    "ban 3": {"x": 14.550, "y": 17.700, "qz": 0, "qw": 1, "arrive_dist": 0.9},
+    "ban 4": {"x": 14.800, "y": 14.250, "qz": 0, "qw": 1, "arrive_dist": 0.9},
 }
+
+
+def get_arrive_dist(diem):
+    d = diem.get("arrive_dist", ARRIVE_DIST)
+    try:
+        return float(d)
+    except Exception:
+        return ARRIVE_DIST
 
 
 def tim_diem(ten):
@@ -252,7 +273,35 @@ def api_find_move_mission(headers):
     return move_guid, param_name or "Position"
 
 
+
+
+def api_charge(headers, marker_guid, ten_diem):
+    print("  Dùng mission ChargeAtStation...")
+    
+    # XÓA QUEUE CŨ ĐỂ KHÔNG BỊ TRÔI LỆNH TRƯỚC ĐÓ (ví dụ đang gọi rớt lại lệnh đi bếp)
+    try:
+        requests.delete(f"{API_URL}/mission_queue", headers=headers, timeout=5)
+        print("  Đã xóa hàng đợi MiR cũ.")
+    except Exception as e:
+        print("  Không thể xóa hàng đợi MiR:", e)
+
+    body = {
+        "mission_id": "mirconst-guid-0000-0004-actionlist00",
+        "parameters": [
+            {"id": "chargingStationPosition", "value": marker_guid}
+        ]
+    }
+    r = requests.post(f"{API_URL}/mission_queue", headers=headers, json=body, timeout=5)
+    if r.status_code == 201:
+        mission_id = r.json().get("id")
+        print(f"  Đã đưa Charge mission vào queue (ID: {mission_id})")
+        return True
+    else:
+        print(f"  Lỗi queue Charge mission: {r.status_code} {r.text}")
+        return False
+
 def api_navigate(headers, diem, ten_diem):
+    # Di chuyển bình thường
     """
     Di chuyển robot bằng REST API.
     Nếu vị trí bị obstacle, tự dịch nhẹ ±0.3m để tìm vị trí hợp lệ.
@@ -489,6 +538,8 @@ def wait_arrival(robot, diem, headers=None, timeout=TIMEOUT, rest_mode=False):
     last_log  = 0    # timer in log (mỗi 3s)
     last_rest = 0    # timer REST API — timer RIÊNG (mỗi 2s)
 
+    arrive_dist = get_arrive_dist(diem)
+
     while not rospy.is_shutdown() and time.time() < deadline:
         now = time.time()
 
@@ -521,7 +572,7 @@ def wait_arrival(robot, diem, headers=None, timeout=TIMEOUT, rest_mode=False):
                 print(f"  Cách đích: {dist:.2f}m | ws={ws_st['val']}{extra}")
                 last_log = now
 
-            if dist < ARRIVE_DIST:
+            if dist < arrive_dist:
                 print(f"  ✓ Đã đến! (cách đích {dist:.2f}m)")
                 return True
 
@@ -536,8 +587,8 @@ def wait_arrival(robot, diem, headers=None, timeout=TIMEOUT, rest_mode=False):
                     if mir_state == 5:           # Executing
                         was_exec[0] = True
 
-                    # Hoàn thành: đã Executing → về Ready
-                    if rest_mode and was_exec[0] and mir_state == 3:
+                    # Hoàn thành mission trong REST mode
+                    if rest_mode and mir_state == 3:
                         try:
                             eq = requests.get(f"{API_URL}/mission_queue", headers=headers, timeout=3)
                             if eq.status_code == 200 and eq.json():
@@ -548,13 +599,15 @@ def wait_arrival(robot, diem, headers=None, timeout=TIMEOUT, rest_mode=False):
                                 elif q_state not in ("Executing", "Pending"):
                                     print(f"  ✓ Mission hoàn thành (queue={q_state})")
                                     return True
-                                # Nếu vẫn Executing/Pending thì chờ tiếp
+                                # Nếu vẫn Executing/Pending: nếu từng thấy executing thì chờ tiếp,
+                                # còn chưa từng thấy executing thì cũng chờ thêm để tránh false positive.
                             else:
                                 print(f"  ✓ Mission hoàn thành (state Ready)")
                                 return True
                         except Exception:
-                            print(f"  ✓ Mission hoàn thành (state Ready)")
-                            return True
+                            if was_exec[0]:
+                                print(f"  ✓ Mission hoàn thành (state Ready)")
+                                return True
 
                     # Lỗi
                     if mir_state in (10, 12):
@@ -602,7 +655,7 @@ def show_menu():
     print("─" * 45)
 
 
-def handle_command(ten, robot, headers):
+def handle_command(ten, robot, headers, non_interactive=False):
     """Xử lý một lệnh. Trả về True nếu muốn thoát."""
 
     # ── pos ──
@@ -736,13 +789,16 @@ def handle_command(ten, robot, headers):
     if x is not None:
         d0 = math.sqrt((x - diem["x"])**2 + (y - diem["y"])**2)
         print(f"Vị trí hiện tại: x={x:.3f}, y={y:.3f} (cách đích {d0:.2f}m)")
+        if d0 < get_arrive_dist(diem):
+            print(f"✅ Robot đã ở gần '{ten_chuan}' rồi, bỏ qua lệnh di chuyển.")
+            return False
 
     if headers:
         api_ensure_ready(headers)
 
     print(f"Đi đến '{ten_chuan}' (x={diem['x']:.3f}, y={diem['y']:.3f}) ...")
 
-    MAX_RETRIES = 2
+    MAX_RETRIES = 1 if non_interactive else 2
     ok = False
     for attempt in range(1, MAX_RETRIES + 1):
         if attempt > 1:
@@ -753,7 +809,11 @@ def handle_command(ten, robot, headers):
 
         rest_ok = False
         if headers:
-            rest_ok = api_navigate(headers, diem, ten_chuan)
+            if ten_chuan == "sac":
+                # marker guid cho 'sac'
+                rest_ok = api_charge(headers, "ba61401e-2206-11f1-8f53-000129af8ea5", ten_chuan)
+            else:
+                rest_ok = api_navigate(headers, diem, ten_chuan)
 
         if not rest_ok:
             print("WebSocket goal (backup):")
@@ -762,7 +822,8 @@ def handle_command(ten, robot, headers):
             print("[REST API OK]")
 
         print("Đang chờ robot đến đích ...")
-        result = wait_arrival(robot, diem, headers, rest_mode=rest_ok)
+        timeout_sec = 90 if non_interactive else TIMEOUT
+        result = wait_arrival(robot, diem, headers, timeout=timeout_sec, rest_mode=rest_ok)
 
         if result is True:
             ok = True
@@ -819,11 +880,12 @@ def main():
     else:
         print("REST API không khả dụng - chỉ dùng WebSocket.")
 
-    # ── Nếu có argument → chạy rồi vào loop ──
+    # ── Nếu có argument → chạy 1 lần rồi thoát (mode non-interactive) ──
     if len(sys.argv) >= 2:
         ten_arg = " ".join(sys.argv[1:]).strip().lower()
         print()
-        handle_command(ten_arg, robot, headers)
+        handle_command(ten_arg, robot, headers, non_interactive=True)
+        return
 
     # ── Vòng lặp tương tác ──
     while not rospy.is_shutdown():
@@ -841,7 +903,7 @@ def main():
         if not ten:
             continue
 
-        handle_command(ten, robot, headers)
+        handle_command(ten, robot, headers, non_interactive=False)
 
 
 if __name__ == "__main__":
