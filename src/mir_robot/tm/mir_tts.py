@@ -103,13 +103,14 @@ def play_sound_on_mir(headers: dict, sound_guid: str, volume: int = 100):
          raise Exception(f"Create mission failed: {resp.text}")
     mission_guid = resp.json()["guid"]
     
-    # 2. Thêm hành động "play_sound" vào Mission
+    # 2. Thêm hành động "sound" vào Mission
     action_payload = {
-        "action_type": "play_sound",
+        "action_type": "sound",
         "parameters": [
             {"id": "sound", "value": sound_guid},
-            {"id": "volume", "value": volume},
-            {"id": "blocking", "value": False} # Đi true sẽ chặn bánh xe đứng yên đến khi nói xong
+            {"id": "volume", "value": float(volume)},
+            {"id": "mode", "value": "full"},
+            {"id": "duration", "value": "00:00:00"}
         ],
         "priority": 1
     }
