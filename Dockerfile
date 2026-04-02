@@ -44,11 +44,9 @@ ENV PIP_RETRIES=20
 # Cài pip mới + wheel tools để giảm lỗi resolver/download khi build
 RUN python3 -m pip install --no-cache-dir --upgrade pip setuptools wheel
 
-# Cài torch CUDA để Ultralytics/YOLO chạy GPU trong container
-RUN python3 -m pip install --no-cache-dir \
-    --index-url https://download.pytorch.org/whl/cu121 \
-    torch==2.4.1 \
-    torchvision==0.19.1
+# ĐÃ CẬP NHẬT: Gỡ bản cũ 2.4.1 (chỉ hỗ trợ đến sm_90). 
+# Cài bản PyTorch Preview/Nightly kèm CUDA 12.4 mới nhất dành riêng cho dòng card khủng RTX 50-series (sm_120) của bạn!
+RUN python3 -m pip install --no-cache-dir --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cu124
 
 # Base image co the da co psutil (distutils), can cai de bang ignore-installed
 # de tranh loi "Cannot uninstall psutil ... distutils installed project".

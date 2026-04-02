@@ -442,10 +442,13 @@ def ws_get_position(robot, timeout=5.0):
             pass
 
     robot.subscribe("/robot_pose", cb)
-    t0 = time.time()
-    while result[0] is None and (time.time() - t0) < timeout:
-        time.sleep(0.1)
-    return result[0], result[1]
+    try:
+        t0 = time.time()
+        while result[0] is None and (time.time() - t0) < timeout:
+            time.sleep(0.1)
+        return result[0], result[1]
+    finally:
+        robot.unhook(cb)
 
 
 def ws_send_goal(robot, diem):
@@ -552,6 +555,8 @@ def wait_arrival(robot, diem, headers=None, timeout=TIMEOUT, rest_mode=False, ca
                     pass
                 # Khôi phục trạng thái Ready (3) để sẵn sàng nhận lệnh mới
                 api_set_state(headers, 3)
+            robot.unhook(pose_cb)
+            robot.unhook(status_cb)
             return "cancelled"
 
         now = time.time()
@@ -587,6 +592,8 @@ def wait_arrival(robot, diem, headers=None, timeout=TIMEOUT, rest_mode=False, ca
 
             if dist < arrive_dist:
                 print(f"  ✓ Đã đến! (cách đích {dist:.2f}m)")
+                robot.unhook(pose_cb)
+                robot.unhook(status_cb)
                 return True
 
         # ── REST API polling — timer RIÊNG, không dùng last_log ──
@@ -608,18 +615,26 @@ def wait_arrival(robot, diem, headers=None, timeout=TIMEOUT, rest_mode=False, ca
                                 q_state = eq.json()[-1].get("state", "")
                                 if q_state == "Done":
                                     print(f"  ✓ Mission Done!")
+                                    robot.unhook(pose_cb)
+                                    robot.unhook(status_cb)
                                     return True
                                 elif q_state not in ("Executing", "Pending"):
                                     print(f"  ✓ Mission hoàn thành (queue={q_state})")
+                                    robot.unhook(pose_cb)
+                                    robot.unhook(status_cb)
                                     return True
                                 # Nếu vẫn Executing/Pending: nếu từng thấy executing thì chờ tiếp,
                                 # còn chưa từng thấy executing thì cũng chờ thêm để tránh false positive.
                             else:
                                 print(f"  ✓ Mission hoàn thành (state Ready)")
+                                robot.unhook(pose_cb)
+                                robot.unhook(status_cb)
                                 return True
                         except Exception:
                             if was_exec[0]:
                                 print(f"  ✓ Mission hoàn thành (state Ready)")
+                                robot.unhook(pose_cb)
+                                robot.unhook(status_cb)
                                 return True
 
                     # Lỗi
@@ -631,6 +646,8 @@ def wait_arrival(robot, diem, headers=None, timeout=TIMEOUT, rest_mode=False, ca
                             print(f"  {str(errs[0].get('description',''))[:120]}")
                         if mt:
                             print(f"  Mission: {mt}")
+                        robot.unhook(pose_cb)
+                        robot.unhook(status_cb)
                         return "error"
 
             except Exception:
@@ -642,14 +659,20 @@ def wait_arrival(robot, diem, headers=None, timeout=TIMEOUT, rest_mode=False, ca
             if sv == 1:
                 ws_st["was_active"] = True
             elif ws_st["was_active"] and sv == 3:
+                robot.unhook(pose_cb)
+                robot.unhook(status_cb)
                 return True
             elif ws_st["was_active"] and sv in (4, 5, 8):
                 print(f"  WS status lỗi ({sv})")
+                robot.unhook(pose_cb)
+                robot.unhook(status_cb)
                 return False
 
         time.sleep(0.5)
 
     print(f"  Timeout sau {timeout}s!")
+    robot.unhook(pose_cb)
+    robot.unhook(status_cb)
     return False
 
 
@@ -801,7 +824,21 @@ def handle_command(ten, robot, headers, non_interactive=False, cancel_event=None
         return False
 
     diem = DIEM[ten_chuan]
-    x, y = ws_get_position(robot, timeout=2.0)
+    
+    # Ưu tiên lấy vị trí từ REST API để luôn chính xác nhất (không bị trễ như websocket nếu chạy lâu)
+    x, y = None, None
+    if headers:
+        try:
+            st = api_status(headers)
+            if st and "position" in st:
+                x = st["position"].get("x")
+                y = st["position"].get("y")
+        except Exception:
+            pass
+            
+    if x is None or y is None:
+        x, y = ws_get_position(robot, timeout=2.0)
+        
     if x is not None:
         d0 = math.sqrt((x - diem["x"])**2 + (y - diem["y"])**2)
         print(f"Vị trí hiện tại: x={x:.3f}, y={y:.3f} (cách đích {d0:.2f}m)")
