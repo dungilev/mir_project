@@ -123,9 +123,9 @@ class MapLabel(QLabel):
         w, h = self.map_info.width, self.map_info.height
         data = np.array(occ_grid.data, dtype=np.int8).reshape((h, w))
         img = np.zeros((h, w, 3), dtype=np.uint8)
-        img[data == -1] = [127, 127, 127]
-        img[data == 0] = [255, 255, 255]
-        img[data == 100] = [0, 0, 0]
+        img[data == -1] = [220, 220, 220] # Xám nhạt cho vùng Unknown
+        img[data == 0] = [255, 255, 255]  # Trắng cho vùng Free
+        img[data > 0] = [0, 0, 0]         # Đen cho MỌI vật cản (kể cả xác suất thấp)
         self.map_img = cv2.flip(img, 0)
         self.map_data = data
         self.update_view()
@@ -148,14 +148,27 @@ class MapLabel(QLabel):
         if len(self.path_px) > 1:
             for i in range(len(self.path_px)-1):
                 cv2.line(display_img, self.path_px[i], self.path_px[i+1], (255, 0, 0), 2)
-        if self.goal_px:
-            cv2.circle(display_img, self.goal_px, 6, (0, 255, 0), -1)
+                
         if getattr(self, 'table_box_px', None):
             pts = np.array(self.table_box_px, dtype=np.int32).reshape((-1, 1, 2))
-            cv2.polylines(display_img, [pts], True, (0, 0, 255), 2)
+            cv2.polylines(display_img, [pts], True, (255, 0, 0), 2) # Xanh dương giống testlui
+
         if getattr(self, 'auto_target_px', None):
-            cv2.drawMarker(display_img, self.auto_target_px, (0, 165, 255), markerType=cv2.MARKER_STAR, markerSize=20, thickness=2)
-            cv2.circle(display_img, self.auto_target_px, 15, (0, 0, 255), 2)
+            tx, ty = self.auto_target_px
+            cv2.drawMarker(display_img, (tx, ty), (0, 0, 255), markerType=cv2.MARKER_CROSS, markerSize=15, thickness=2)
+            cv2.circle(display_img, (tx, ty), 6, (0, 0, 255), 1)
+
+        if self.goal_px and getattr(self, 'auto_target_px', None):
+            gx, gy = self.goal_px
+            cv2.line(display_img, self.auto_target_px, self.goal_px, (0, 255, 255), 2, cv2.LINE_AA)
+            cv2.circle(display_img, (gx, gy), 8, (0, 255, 0), -1)
+            cv2.putText(display_img, "SAFE GOAL", (gx+10, gy-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 200, 0), 2)
+            
+            ar_len = 35
+            gui_yaw = -self.goal_yaw
+            end_x = int(gx + ar_len * math.cos(gui_yaw))
+            end_y = int(gy + ar_len * math.sin(gui_yaw))
+            cv2.arrowedLine(display_img, (gx, gy), (end_x, end_y), (0, 255, 0), 3, tipLength=0.3)
 
         if self.robot_px and self.map_info:
             res = self.map_info.resolution
@@ -307,6 +320,9 @@ class VideoThread(QThread):
 
 # ==============================================================================
 class MainApp(QMainWindow):
+    map_signal = pyqtSignal(object)
+    pose_signal = pyqtSignal(float, float, float)
+
     def __init__(self):
         super().__init__()
         self.setWindowTitle("MiR Auto Navigation - V3 STATE MACHINE")
@@ -355,6 +371,10 @@ class MainApp(QMainWindow):
             except Exception as e:
                 rospy.logwarn(f"Lỗi khi mở phanh: {e}")
 
+        # Kết nối Signal để tránh xung đột Thread giữa PyQt và ROS
+        self.map_signal.connect(self.map_label.set_map)
+        self.pose_signal.connect(self.map_label.set_robot_pose)
+
         # Video thread (camera + hand tracking)
         self.video_thread = VideoThread()
         self.video_thread.change_pixmap_signal.connect(self.update_camera_image)
@@ -399,12 +419,12 @@ class MainApp(QMainWindow):
         self.camera_label.setPixmap(QPixmap.fromImage(qImg).scaled(self.camera_label.size(), Qt.KeepAspectRatio))
 
     def map_callback(self, msg):
-        self.map_label.set_map(msg)
+        self.map_signal.emit(msg)
 
     def pose_callback(self, msg):
         q = [msg.orientation.x, msg.orientation.y, msg.orientation.z, msg.orientation.w]
         yaw = tf.transformations.euler_from_quaternion(q)[2]
-        self.map_label.set_robot_pose(msg.position.x, msg.position.y, yaw)
+        self.pose_signal.emit(msg.position.x, msg.position.y, yaw)
 
     def on_guest_call(self, msg):
         try:
@@ -450,95 +470,195 @@ class MainApp(QMainWindow):
     def calculate_geometry_safe_goal(self, target_x, target_y, original_yaw=0.0):
         if not self.map_label.map_info or self.map_label.robot_px is None:
             return target_x, target_y, original_yaw
-        res, ox, oy, w, h = self.map_label.map_info.resolution, self.map_label.map_info.origin.position.x, self.map_label.map_info.origin.position.y, self.map_label.map_info.width, self.map_label.map_info.height
-        px_t, py_t = int((target_x - ox)/res), int((target_y - oy)/res)
+            
+        res = self.map_label.map_info.resolution
+        ox = self.map_label.map_info.origin.position.x
+        oy = self.map_label.map_info.origin.position.y
+        w = self.map_label.map_info.width
+        h = self.map_label.map_info.height
         
+        px_t = int((target_x - ox) / res)
+        py_t = int((target_y - oy) / res)
+        
+        px_r = self.map_label.robot_px[0]
+        py_r = h - self.map_label.robot_px[1] - 1 # Chuyển ngược lại tọa độ numpy
+        
+        if not (0 <= px_t < w and 0 <= py_t < h):
+            rospy.logwarn("[GEOM] Điểm vượt giới hạn map")
+            return target_x, target_y, original_yaw
+
         obs_mask = np.where((self.map_label.map_data != 0) & (self.map_label.map_data != -1), 255, 0).astype(np.uint8)
-        win_px = int(6.0 / res)
-        x1, x2 = max(0, px_t - win_px//2), min(w, px_t + win_px//2)
-        y1, y2 = max(0, py_t - win_px//2), min(h, py_t + win_px//2)
+        
+        win_m = 6.0
+        win_px = int(win_m / res)
+        half_win = win_px // 2
+        
+        x1 = max(0, px_t - half_win)
+        x2 = min(w, px_t + half_win)
+        y1 = max(0, py_t - half_win)
+        y2 = min(h, py_t + half_win)
         
         local_mask = obs_mask[y1:y2, x1:x2].copy()
         contours, _ = cv2.findContours(local_mask, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-        global_contours = [c + np.array([[[x1, y1]]]) for c in contours]
         
-        best_contour, min_dist = None, float('inf')
-        for cnt in global_contours:
-            if cv2.contourArea(cnt) < 2 and len(cnt) < 5: continue
-            dist = cv2.pointPolygonTest(cnt, (px_t, py_t), True)
-            if dist >= 0: best_contour = cnt; break
-            if abs(dist) < min_dist: min_dist = abs(dist); best_contour = cnt
+        global_contours = []
+        for cnt in contours:
+            global_cnt = cnt + np.array([[[x1, y1]]])
+            global_contours.append(global_cnt)
             
-        if best_contour is None: 
-            # Không tìm thấy chướng ngại vật (bàn), sinh điểm an toàn cách người 0.7m và quay mặt nhìn về phía người
+        best_contour = None
+        min_dist = float('inf')
+        pt = (px_t, py_t)
+        
+        for cnt in global_contours:
+            if cv2.contourArea(cnt) < 2 and len(cnt) < 5:
+                continue
+            
+            dist = cv2.pointPolygonTest(cnt, pt, True)
+            if dist >= 0:
+                best_contour = cnt
+                break
+            else:
+                abs_dist = abs(dist)
+                if abs_dist < min_dist:
+                    min_dist = abs_dist
+                    best_contour = cnt
+                
+        if best_contour is None:
+            # Fallback y hệt mainv3 cũ (khi ko thấy bàn)
             rx, ry = target_x, target_y
             if self.map_label.robot_px:
                 rx = self.map_label.robot_px[0] * res + ox
                 ry = (h - 1 - self.map_label.robot_px[1]) * res + oy
             yaw = math.atan2(target_y - ry, target_x - rx)
-            # Thụt lùi 0.7m từ vị trí người theo hướng robot tới người
             goal_w_x = target_x - 0.7 * math.cos(yaw)
             goal_w_y = target_y - 0.7 * math.sin(yaw)
             
-            # Cập nhật UI
             self.map_label.auto_target_px = (int((target_x - ox)/res), h - int((target_y - oy)/res) - 1)
             self.map_label.goal_px = (int((goal_w_x - ox)/res), h - int((goal_w_y - oy)/res) - 1)
+            self.map_label.goal_yaw = yaw
             self.map_label.update_view()
-            
             return goal_w_x, goal_w_y, yaw
             
         rect = cv2.minAreaRect(best_contour)
-        box = np.array(cv2.boxPoints(rect), dtype=np.int32)
-        edges = [{'p1': box[i], 'p2': box[(i+1)%4], 'len': math.hypot(box[(i+1)%4][0]-box[i][0], box[(i+1)%4][1]-box[i][1]), 'center': ((box[i][0]+box[(i+1)%4][0])/2, (box[i][1]+box[(i+1)%4][1])/2)} for i in range(4)]
-        edges.sort(key=lambda e: e['len'], reverse=True)
-        long_edges, short_edges = edges[0:2], edges[2:4]
+        box = cv2.boxPoints(rect)
+        box = np.array(box, dtype=np.int32)
         
-        best_long = min(long_edges, key=lambda e: math.hypot(e['center'][0]-px_t, e['center'][1]-py_t))
-        p1, p2 = np.array(best_long['p1'], float), np.array(best_long['p2'], float)
+        edges = []
+        for i in range(4):
+            p1 = box[i]
+            p2 = box[(i+1)%4]
+            length = math.hypot(p2[0]-p1[0], p2[1]-p1[1])
+            center = ((p1[0]+p2[0])/2.0, (p1[1]+p2[1])/2.0)
+            edges.append({'p1': p1, 'p2': p2, 'len': length, 'center': center})
+            
+        edges.sort(key=lambda e: e['len'], reverse=True)
+        long_edges = edges[0:2]
+        short_edges = edges[2:4]
+        
+        best_long_edge = None
+        min_ed = float('inf')
+        for edge in long_edges:
+            d = math.hypot(edge['center'][0] - px_t, edge['center'][1] - py_t)
+            if d < min_ed:
+                min_ed = d
+                best_long_edge = edge
+                
+        p1 = np.array(best_long_edge['p1'], dtype=float)
+        p2 = np.array(best_long_edge['p2'], dtype=float)
+        
         vec_edge = p2 - p1
-        vec_unit = vec_edge / best_long['len'] if best_long['len']>0 else np.array([1,0])
-        proj_length = np.dot(np.array([px_t - p1[0], py_t - p1[1]]), vec_unit)
-        t = max(0.0, min(1.0, proj_length / best_long['len'] if best_long['len']>0 else 0.5))
-        proj_pt = p1 + vec_unit * proj_length
+        length_edge = best_long_edge['len']
+        vec_edge_unit = vec_edge / length_edge if length_edge > 0 else np.array([1, 0])
+        
+        vec_pt = np.array([px_t - p1[0], py_t - p1[1]], dtype=float)
+        proj_length = np.dot(vec_pt, vec_edge_unit)
+        
+        t = proj_length / length_edge if length_edge > 0 else 0.5
+        t = max(0.0, min(1.0, t))
+        
+        proj_pt = p1 + vec_edge_unit * proj_length
         
         rect_center = np.array(rect[0])
-        normal_long = np.array([-vec_unit[1], vec_unit[0]])
-        if np.dot(np.array(best_long['center']) - rect_center, normal_long) < 0: normal_long = -normal_long
+        vec_center_to_edge = np.array(best_long_edge['center']) - rect_center
+        normal_long = np.array([-vec_edge_unit[1], vec_edge_unit[0]]) # Vuông góc
+        if np.dot(vec_center_to_edge, normal_long) < 0:
+            normal_long = -normal_long # Đảm bảo hướng ra ngoài
+            
+        goal_px_x, goal_px_y = None, None
+        goal_yaw = 0.0
         
         if t < 0.2 or t > 0.8:
-            best_short = min(short_edges, key=lambda e: math.hypot(e['center'][0]-proj_pt[0], e['center'][1]-proj_pt[1]))
-            vec_se = np.array(best_short['p2'], float) - np.array(best_short['p1'], float)
-            vec_se_unit = vec_se / best_short['len'] if best_short['len']>0 else np.array([1,0])
+            best_short_edge = None
+            min_sd = float('inf')
+            for edge in short_edges:
+                d = math.hypot(edge['center'][0] - proj_pt[0], edge['center'][1] - proj_pt[1])
+                if d < min_sd:
+                    min_sd = d
+                    best_short_edge = edge
+                    
+            safe_dist_px = int(0.7 / res) # Lùi 0.7m
+            
+            sp1 = np.array(best_short_edge['p1'], dtype=float)
+            sp2 = np.array(best_short_edge['p2'], dtype=float)
+            vec_se = sp2 - sp1
+            vec_se_unit = vec_se / best_short_edge['len'] if best_short_edge['len'] > 0 else np.array([1,0])
             normal_short = np.array([-vec_se_unit[1], vec_se_unit[0]])
-            if np.dot(np.array(best_short['center']) - rect_center, normal_short) < 0: normal_short = -normal_short
+            if np.dot(np.array(best_short_edge['center']) - rect_center, normal_short) < 0:
+                normal_short = -normal_short
+                
+            goal_px_x = best_short_edge['center'][0] + normal_short[0] * safe_dist_px
+            goal_px_y = best_short_edge['center'][1] + normal_short[1] * safe_dist_px
             
-            goal_x = best_short['center'][0] + normal_short[0] * int(0.7/res)
-            goal_y = best_short['center'][1] + normal_short[1] * int(0.7/res)
-            yaw = math.atan2(proj_pt[1] - goal_y, proj_pt[0] - goal_x)
+            dir_yaw = np.array([proj_pt[0] - goal_px_x, proj_pt[1] - goal_px_y])
+            goal_yaw = math.atan2(dir_yaw[1], dir_yaw[0])
+            
         else:
-            offset_px = int(0.7/res)
-            g1 = proj_pt + normal_long*offset_px - vec_unit*offset_px
-            g2 = proj_pt + normal_long*offset_px + vec_unit*offset_px
-            pref, fall = (g1, g2) if t < 0.5 else (g2, g1)
+            offset_px = int(0.7 / res)
+            goal_p2 = proj_pt + normal_long * offset_px + vec_edge_unit * offset_px
+            goal_p1 = proj_pt + normal_long * offset_px - vec_edge_unit * offset_px
             
-            safe_mask = cv2.erode((self.map_label.map_data == 0).astype(np.uint8), cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (int(0.4/res)*2+1, int(0.4/res)*2+1)))
+            if t < 0.5:
+                preferred_goal = goal_p1
+                fallback_goal = goal_p2
+            else:
+                preferred_goal = goal_p2
+                fallback_goal = goal_p1
+                
+            free_space = (self.map_label.map_data == 0).astype(np.uint8)
+            safe_radius_px = int(0.4 / res)
+            kernel_safe = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (safe_radius_px*2+1, safe_radius_px*2+1))
+            safe_mask = cv2.erode(free_space, kernel_safe)
+            
             def is_safe(g):
                 gx, gy = int(g[0]), int(g[1])
-                return safe_mask[gy, gx] == 1 if 0<=gx<w and 0<=gy<h else False
+                if 0 <= gx < w and 0 <= gy < h:
+                    return safe_mask[gy, gx] == 1
+                return False
                 
-            chosen = pref if is_safe(pref) else (fall if is_safe(fall) else proj_pt + normal_long*offset_px)
-            goal_x, goal_y = chosen[0], chosen[1]
-            yaw = math.atan2(proj_pt[1] - goal_y, proj_pt[0] - goal_x)
+            if is_safe(preferred_goal):
+                chosen = preferred_goal
+            elif is_safe(fallback_goal):
+                chosen = fallback_goal
+            else:
+                chosen = proj_pt + normal_long * offset_px
+                
+            goal_px_x = chosen[0]
+            goal_px_y = chosen[1]
             
-        goal_w_x = ox + goal_x * res
-        goal_w_y = oy + goal_y * res
+            dir_yaw = np.array([proj_pt[0] - goal_px_x, proj_pt[1] - goal_px_y])
+            goal_yaw = math.atan2(dir_yaw[1], dir_yaw[0])
+
+        goal_w_x = ox + goal_px_x * res
+        goal_w_y = oy + goal_px_y * res
 
         self.map_label.table_box_px = [(int(b[0]), h-int(b[1])-1) for b in box]
-        self.map_label.auto_target_px = (int((target_x - ox)/res), h - int((target_y - oy)/res) - 1)
-        self.map_label.goal_px = (int(goal_x), h - int(goal_y) - 1)
+        self.map_label.auto_target_px = (int(px_t), h - int(py_t) - 1)
+        self.map_label.goal_yaw = goal_yaw
+        self.map_label.goal_px = (int(goal_px_x), h - int(goal_px_y) - 1)
         self.map_label.update_view()
         
-        return goal_w_x, goal_w_y, yaw
+        return goal_w_x, goal_w_y, goal_yaw
 
     # ================= WORKER STATE MACHINE =================
     def worker_loop(self):
@@ -563,17 +683,23 @@ class MainApp(QMainWindow):
 
     def move_to_pose(self, x, y, yaw):
         rospy.loginfo(f"🚀 Bắt đầu di chuyển tới toạ độ động ({x:.2f}, {y:.2f})")
-        if not self.robot:
-            rospy.logerr("❌ Chưa kết nối WebSocket!")
-            return False
             
         q = tf.transformations.quaternion_from_euler(0, 0, yaw)
         diem_dong = {"x": x, "y": y, "qz": q[2], "qw": q[3], "arrive_dist": 0.15}
         
-        nav.ws_send_goal(self.robot, diem_dong)
-        result = nav.wait_arrival(self.robot, diem_dong, self.mir_headers, timeout=60, rest_mode=False)
+        # SỬ DỤNG REST API ĐỂ CÓ THỂ QUAY ĐÚNG GÓC YAW THAY VÌ WS_SEND_GOAL GÂY TRƯỢT GÓC
+        rest_ok = False
+        if self.mir_headers:
+            rest_ok = nav.api_navigate(self.mir_headers, diem_dong, "diem_dong")
+            
+        if not rest_ok:
+            rospy.logwarn("REST API thất bại, thử dùng WebSocket dự phòng...")
+            if self.robot:
+                nav.ws_send_goal(self.robot, diem_dong)
+        
+        result = nav.wait_arrival(self.robot, diem_dong, self.mir_headers, timeout=60, rest_mode=rest_ok)
         if result:
-            rospy.loginfo(f"✅ Đã tới toạ độ động")
+            rospy.loginfo(f"✅ Đã tới toạ độ động với góc yaw chuẩn xác")
             return True
         else:
             rospy.logwarn(f"❌ Di chuyển toạ độ động thất bại hoặc bị kẹt!")

@@ -57,6 +57,7 @@ RUN python3 -m pip install --no-cache-dir --ignore-installed psutil==7.2.2
 
 RUN python3 -m pip install --no-cache-dir \
     numpy \
+    pyserial \
     sherpa-onnx \
     sounddevice \
     pygame \
@@ -72,7 +73,7 @@ RUN python3 -m pip install --no-cache-dir \
 RUN apt-get update && apt-get install -y software-properties-common && \
     add-apt-repository -y ppa:deadsnakes/ppa && \
     apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y python3.9 python3.9-venv python3.9-dev && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y python3.9 python3.9-venv python3.9-dev python3.9-tk && \
     python3.9 -m venv /opt/ai_venv && \
     /opt/ai_venv/bin/pip install --upgrade pip
 
@@ -83,6 +84,7 @@ RUN /opt/ai_venv/bin/pip install "rospy>=1.15.11" "std_msgs" "geometry_msgs" "se
 RUN /opt/ai_venv/bin/pip install \
     matplotlib \
     pillow \
+    pyserial \
     scipy \
     ultralytics \
     sherpa-onnx \

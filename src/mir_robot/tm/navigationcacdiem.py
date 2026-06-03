@@ -171,6 +171,9 @@ def api_ensure_ready(headers):
     if state in (10, 12):  # Error
         print("  Đang xóa lỗi ...")
         try:
+            # MiR v2 API yêu cầu PUT clear_error = true cho các lỗi cứng
+            requests.put(f"{API_URL}/status", headers=headers, json={"clear_error": True}, timeout=3)
+            time.sleep(0.5)
             requests.delete(f"{API_URL}/status", headers=headers, timeout=5)
             time.sleep(1)
         except Exception:
@@ -378,16 +381,30 @@ def api_navigate(headers, diem, ten_diem):
         st = api_status(headers)
         if st and st.get("state_id") in (10, 12):
             err = str(st.get("errors", ""))
-            if "obstacle" in err.lower():
-                print(f"  ⚠ Obstacle tại ({x:.3f}, {y:.3f}), thử offset khác...")
-                # Xóa error + dọn dẹp
+            # Thêm 'forbidden zone' vào điều kiện catch lỗi
+            if "obstacle" in err.lower() or "forbidden area" in err.lower() or "forbidden zone" in err.lower():
+                print(f"  ⚠ Lỗi ({err[:80]}), thử offset khác...")
+                # Xóa error cực mạnh
                 try:
+                    requests.put(f"{API_URL}/status", headers=headers, json={"clear_error": True}, timeout=3)
                     requests.delete(f"{API_URL}/status", headers=headers, timeout=3)
                 except Exception:
                     pass
                 time.sleep(1)
+                
+                # Ép robot về Pause (4) trước để reset state machine, sau đó mới lên Ready (3)
+                api_set_state(headers, 4)
+                time.sleep(0.5)
                 api_set_state(headers, 3)
                 time.sleep(0.5)
+                
+                # Kiểm tra lại xem đã thoát lỗi chưa
+                st_check = api_status(headers)
+                if st_check and st_check.get("state_id") in (10, 12):
+                    print("  ❌ KHÔNG THỂ CLEAR ERROR BẰNG API! Vui lòng ấn Reset trên Web MiR.")
+                    api_delete_position(headers, pos_guid)
+                    return False
+                    
                 api_delete_position(headers, pos_guid)
                 continue
             else:

@@ -1,5 +1,4 @@
 import sys
-import rospy
 import time
 import requests
 import base64
@@ -24,13 +23,21 @@ import navigationcacdiem as nav
 
 def generate_tts_wav(text: str, output_wav_path: str):
     """
-    Sử dụng model VITS Piper vi_VN
+    Sử dụng model VITS Piper vi_VN (25 hours) cho giọng tự nhiên hơn
     """
-    model_dir = "/root/catkin_ws/src/vits-piper-vi_VN-vais1000-medium"
+    # Nếu chạy local trên Ubuntu thì lấy đường dẫn thư mục theo file đang chạy
+    local_dir = os.path.join(os.path.dirname(__file__), "..", "..", "vits-piper-vi_VN-25hours_single-low")
+    
+    # Ưu tiên lấy model local, nếu không thấy thì dùng đường dẫn trong Docker
+    if os.path.exists(local_dir):
+        model_dir = os.path.abspath(local_dir)
+    else:
+        model_dir = "/root/catkin_ws/src/vits-piper-vi_VN-25hours_single-low"
+
     tts_config = sherpa_onnx.OfflineTtsConfig(
         model=sherpa_onnx.OfflineTtsModelConfig(
             vits=sherpa_onnx.OfflineTtsVitsModelConfig(
-                model=os.path.join(model_dir, "vi_VN-vais1000-medium.onnx"),
+                model=os.path.join(model_dir, "vi_VN-25hours_single-low.onnx"),
                 lexicon="",
                 tokens=os.path.join(model_dir, "tokens.txt"),
                 data_dir=os.path.join(model_dir, "espeak-ng-data"),
