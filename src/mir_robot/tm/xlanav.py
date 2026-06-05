@@ -182,10 +182,8 @@ class MapCanvas(FigureCanvas):
             if user_pose is not None:
                 umap_x = (user_pose[0] - map_origin_x) / map_resolution
                 umap_y = (user_pose[1] - map_origin_y) / map_resolution
-                circle2 = plt.Circle((umap_x, umap_y), 0.3 / map_resolution, color='#e74c3c', fill=True, alpha=0.9)
+                circle2 = plt.Circle((umap_x, umap_y), 0.15 / map_resolution, color='#e74c3c', fill=True, alpha=1.0)
                 self.ax.add_patch(circle2)
-                self.ax.text(umap_x, umap_y + 1.0, "USER", color="white", fontsize=8, ha='center', va='center', bbox=dict(facecolor='red', alpha=0.5))
-
             if robot_planned_path:
                 path_x = [(p[0] - map_origin_x) / map_resolution for p in robot_planned_path]
                 path_y = [(p[1] - map_origin_y) / map_resolution for p in robot_planned_path]
@@ -819,31 +817,40 @@ class tracking_loop:
                                 signal_bus.status_update.emit(f"Trạng thái: Đang theo dõi người dùng")
 
                     # Cập nhật Giao diện Box
-                    is_too_close = d_ngang_m < 1.0
+                    is_too_close = (0 < d_ngang_m < 1.0)
+                    is_invalid = (d_ngang_m <= 0.0 or d_ngang_m > 5.0)
                     
                     if self.locked_target_id is not None:
                         if track_id == self.locked_target_id:
                             cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 255), 3)
                             cv2.putText(frame, "LOCKED TARGET", (int(x1), int(y1)-30), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 255), 2)
                             
-                            dist_str = f"Khoang cach: {d_ngang_m:.2f}m"
-                            txt_color = (0, 0, 255) if is_too_close else (0, 255, 255)
-                            if is_too_close: dist_str += " (QUA GAN - KHONG DI)"
+                            if is_invalid:
+                                dist_str = "Khoang cach: Khong ro / >5m"
+                                txt_color = (0, 165, 255)
+                            else:
+                                dist_str = f"Khoang cach: {d_ngang_m:.2f}m"
+                                txt_color = (0, 0, 255) if is_too_close else (0, 255, 255)
+                                if is_too_close: dist_str += " (QUA GAN - KHONG DI)"
                             
                             cv2.putText(frame, dist_str, (int(x1), int(y1)-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, txt_color, 2)
                         else:
-                            cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), (100, 100, 100), 1)
-                            cv2.putText(frame, f"{d_ngang_m:.2f}m", (int(x1), int(y1)-5), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (100, 100, 100), 1)
+                            # Không hiển thị box người ngoài 5m để đỡ rối mắt
+                            if not is_invalid:
+                                cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), (100, 100, 100), 1)
+                                cv2.putText(frame, f"{d_ngang_m:.2f}m", (int(x1), int(y1)-5), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (100, 100, 100), 1)
                     else:
-                        cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 2)
-                        dist_str = f"{d_ngang_m:.2f}m"
-                        txt_color = (0, 0, 255) if is_too_close else (0, 255, 0)
-                        if is_too_close: dist_str += " (Qua gan)"
-                        cv2.putText(frame, dist_str, (int(x1), int(y1)-5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, txt_color, 2)
+                        if not is_invalid:
+                            cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 2)
+                            dist_str = f"{d_ngang_m:.2f}m"
+                            txt_color = (0, 0, 255) if is_too_close else (0, 255, 0)
+                            if is_too_close: dist_str += " (Qua gan)"
+                            cv2.putText(frame, dist_str, (int(x1), int(y1)-5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, txt_color, 2)
                         
                         # Chỉ in log lên Terminal sau mỗi 1 giây để đỡ giật màn hình
                         if not hasattr(self, 'last_print_time') or curr_time - self.last_print_time > 1.0:
-                            print(f"[Tracking] Người dùng ID {track_id} đang ở khoảng cách: {d_ngang_m:.2f}m")
+                            if not is_invalid:
+                                print(f"[Tracking] Người dùng ID {track_id} đang ở khoảng cách: {d_ngang_m:.2f}m")
                             self.last_print_time = curr_time
 
             # Tự động mở khóa nếu mục tiêu mất dấu quá 3 giây
