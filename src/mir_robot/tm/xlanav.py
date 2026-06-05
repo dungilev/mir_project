@@ -486,6 +486,17 @@ def get_depth_distance_m(depth_frame, box, frame_w, frame_h):
                 if 0.3 < d < 6.0: distances.append(d)
     return float(np.median(distances)) if distances else -1.0
 
+def get_depth_distance_m_seg(depth_frame, poly_pts, frame_w, frame_h):
+    distances = []
+    for pt in poly_pts:
+        px, py = int(pt[0]), int(pt[1])
+        orig_px = frame_w - 1 - px # Lật ngược theo logic của code cũ (Mirror)
+        if 0 <= orig_px < frame_w and 0 <= py < frame_h:
+            d = depth_frame.get_distance(orig_px, py)
+            if 0.3 < d < 6.0: distances.append(d)
+    if not distances: return -1.0
+    return float(np.percentile(distances, 30))
+
 def get_person_relative_position_m(depth_frame, box, frame_w, frame_h, depth_intrinsics, distance_m):
     x1, y1, x2, y2 = map(int, box)
     center_x = (x1 + x2) // 2
@@ -542,6 +553,10 @@ class tracking_loop:
         if not self.camera_ready:
             signal_bus.status_update.emit(f"Lỗi: Không kết nối Camera 3D! Vẫn chờ /map")
         
+        print("⏳ Đang khởi động mô hình AI (YOLO11n & MediaPipe)...")
+        self.model = YOLO('yolo11n-pose.pt')
+        self.model_seg = YOLO('yolo11n-seg.pt') # Thêm model Segmentation để bóc tách chuẩn xác
+
         while not rospy.is_shutdown():
             if not self.camera_ready:
                 rospy.sleep(1)
@@ -557,33 +572,49 @@ class tracking_loop:
             frame = cv2.flip(frame, 1)
             frame_h, frame_w = frame.shape[:2]
 
-            # 1. MediaPipe ngón tay
-            rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            hand_results = self.hands_detector.process(rgb_frame)
-            detected_hands = []
-
-            if hand_results.multi_hand_landmarks:
-                for hand_landmarks in hand_results.multi_hand_landmarks:
-                    def get_dist(i1, i2):
-                        p1, p2 = hand_landmarks.landmark[i1], hand_landmarks.landmark[i2]
-                        return math.hypot(p1.x - p2.x, p1.y - p2.y)
-                    
-                    tip_ids = [4, 8, 12, 16, 20]; pip_ids = [2, 6, 10, 14, 18]
-                    tip_dists = [get_dist(t, 0) for t in tip_ids]
-                    pip_dists = [get_dist(p, 0) for p in pip_ids]
-                    
-                    fingers = sum(1 for td, pd in zip(tip_dists, pip_dists) if td > pd)
-                    all_ext = all(td >= 1.3 * pd for td, pd in zip(tip_dists, pip_dists))
-                    thumb_sp = get_dist(4, 8) > 0.45 * max(1e-6, get_dist(5, 17))
-                    open5_strict = (fingers == 5) and all_ext and thumb_sp
-
-                    wrist = hand_landmarks.landmark[0]
-                    hx, hy = int(wrist.x * frame_w), int(wrist.y * frame_h)
-                    detected_hands.append((hx, hy, fingers, open5_strict))
-
-            # 2. YOLO Nhan dien nguoi
+            # 0. Tối ưu MediaPipe: CHỈ bật khi Robot đang đứng yên (IDLE) hoặc đã áp sát mục tiêu (đến bàn)
+            need_mediapipe = False
+            if self.robot_state == "IDLE":
+                need_mediapipe = True
+                
+            # Lấy trước khoảng cách thô để biết đã áp sát chưa
             results = self.model.track(frame, conf=0.45, persist=True, tracker="bytetrack.yaml", verbose=False)
+            results_seg = self.model_seg.predict(frame, conf=0.45, verbose=False) # Chạy Seg
+            
+            if self.locked_target_id is not None and getattr(self, 'locked_bbox', None):
+                bx1, by1, bx2, by2 = self.locked_bbox
+                d_rough = get_depth_distance_m(depth_frame, (bx1, by1, bx2, by2), frame_w, frame_h)
+                if d_rough > 0 and d_rough <= STOP_DISTANCE + 0.5:
+                    need_mediapipe = True
+
+            # 1. MediaPipe ngón tay (CHỈ CHẠY KHI CẦN)
+            detected_hands = []
+            if need_mediapipe:
+                rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                hand_results = self.hands_detector.process(rgb_frame)
+
+                if hand_results.multi_hand_landmarks:
+                    for hand_landmarks in hand_results.multi_hand_landmarks:
+                        def get_dist(i1, i2):
+                            p1, p2 = hand_landmarks.landmark[i1], hand_landmarks.landmark[i2]
+                            return math.hypot(p1.x - p2.x, p1.y - p2.y)
+                        
+                        tip_ids = [4, 8, 12, 16, 20]; pip_ids = [2, 6, 10, 14, 18]
+                        tip_dists = [get_dist(t, 0) for t in tip_ids]
+                        pip_dists = [get_dist(p, 0) for p in pip_ids]
+                        
+                        fingers = sum(1 for td, pd in zip(tip_dists, pip_dists) if td > pd)
+                        all_ext = all(td >= 1.3 * pd for td, pd in zip(tip_dists, pip_dists))
+                        thumb_sp = get_dist(4, 8) > 0.45 * max(1e-6, get_dist(5, 17))
+                        open5_strict = (fingers == 5) and all_ext and thumb_sp
+
+                        wrist = hand_landmarks.landmark[0]
+                        hx, hy = int(wrist.x * frame_w), int(wrist.y * frame_h)
+                        detected_hands.append((hx, hy, fingers, open5_strict))
+
             curr_time = time.time()
+            seg_boxes = results_seg[0].boxes if len(results_seg) > 0 and results_seg[0].boxes else None
+            seg_masks = results_seg[0].masks if len(results_seg) > 0 and results_seg[0].masks else None
             
             # --- LOGIC TỰ CHUYỂN ID KHI MẤT DẤU (Chống đổi ID) ---
             current_people = []
@@ -629,10 +660,27 @@ class tracking_loop:
                     if cls != 0: continue # Chi theo con nguoi
                     
                     track_id = int(box.id[0].item()) if box.id is not None else -1
-                    x1, y1, x2, y2 = box.xyxy[0].cpu().numpy()
-                    
-                    # Tinh khoang cach
-                    d_m = get_depth_distance_m(depth_frame, (x1, y1, x2, y2), frame_w, frame_h)
+                    # Segmentation Depth
+                    poly_pts = None
+                    if seg_boxes is not None and seg_masks is not None:
+                        best_j = -1
+                        min_dist_seg = float('inf')
+                        for j, sbox in enumerate(seg_boxes):
+                            sx1, sy1, sx2, sy2 = sbox.xyxy[0].cpu().numpy()
+                            sc_x, sc_y = (sx1+sx2)/2, (sy1+sy2)/2
+                            bc_x, bc_y = (x1+x2)/2, (y1+y2)/2
+                            dist = (sc_x-bc_x)**2 + (sc_y-bc_y)**2
+                            if dist < min_dist_seg and dist < 2500:
+                                min_dist_seg = dist
+                                best_j = j
+                        if best_j != -1 and len(seg_masks.xy) > best_j:
+                            poly_pts = seg_masks.xy[best_j]
+                            
+                    if poly_pts is not None and len(poly_pts) > 0:
+                        d_m = get_depth_distance_m_seg(depth_frame, poly_pts, frame_w, frame_h)
+                    else:
+                        d_m = get_depth_distance_m(depth_frame, (x1, y1, x2, y2), frame_w, frame_h)
+                        
                     delta_h = 1.8 - 0.6
                     d_ngang_m = math.sqrt(d_m**2 - delta_h**2) if d_m > delta_h else d_m
 
