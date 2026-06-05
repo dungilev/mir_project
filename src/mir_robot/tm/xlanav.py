@@ -115,6 +115,7 @@ map_origin_x = 0
 map_origin_y = 0
 robot_pose = None
 goal_pose = None # (x, y) để vẽ điểm đén lên Map
+user_pose = None # (x, y) để vẽ vị trí người dùng lên Map
 map_queue = queue.Queue()
 tf_listener = None
 robot_planned_path = []  # Chứa các điểm x, y của quỹ đạo
@@ -177,6 +178,13 @@ class MapCanvas(FigureCanvas):
                 gmap_y = (goal_pose[1] - map_origin_y) / map_resolution
                 circle = plt.Circle((gmap_x, gmap_y), 0.3 / map_resolution, color='#2ecc71', fill=True, alpha=0.7)
                 self.ax.add_patch(circle)
+
+            if user_pose is not None:
+                umap_x = (user_pose[0] - map_origin_x) / map_resolution
+                umap_y = (user_pose[1] - map_origin_y) / map_resolution
+                circle2 = plt.Circle((umap_x, umap_y), 0.3 / map_resolution, color='#e74c3c', fill=True, alpha=0.9)
+                self.ax.add_patch(circle2)
+                self.ax.text(umap_x, umap_y + 1.0, "USER", color="white", fontsize=8, ha='center', va='center', bbox=dict(facecolor='red', alpha=0.5))
 
             if robot_planned_path:
                 path_x = [(p[0] - map_origin_x) / map_resolution for p in robot_planned_path]
@@ -487,55 +495,68 @@ def get_depth_distance_m(depth_frame, box, frame_w, frame_h):
     return float(np.median(distances)) if distances else -1.0
 
 def get_depth_distance_m_seg(depth_frame, poly_pts, frame_w, frame_h):
+    import numpy as np
+    import cv2
+    mask = np.zeros((frame_h, frame_w), dtype=np.uint8)
+    cv2.fillPoly(mask, [np.array(poly_pts, dtype=np.int32)], 1)
+    ys, xs = np.where(mask == 1)
     distances = []
-    for pt in poly_pts:
-        px, py = int(pt[0]), int(pt[1])
-        orig_px = frame_w - 1 - px # Lật ngược theo logic của code cũ (Mirror)
+    for idx in range(0, len(xs), 10):
+        px, py = xs[idx], ys[idx]
+        orig_px = frame_w - 1 - px
         if 0 <= orig_px < frame_w and 0 <= py < frame_h:
             d = depth_frame.get_distance(orig_px, py)
             if 0.3 < d < 6.0: distances.append(d)
-    if not distances: return -1.0
-    return float(np.percentile(distances, 30))
+    return float(np.median(distances)) if distances else -1.0
 
-def get_person_relative_position_m(depth_frame, box, frame_w, frame_h, depth_intrinsics, distance_m):
-    x1, y1, x2, y2 = map(int, box)
-    center_x = (x1 + x2) // 2
-    orig_px = frame_w - 1 - center_x
-    if distance_m <= 0: return None
-    if depth_intrinsics is None:
-        hfov_rad = math.radians(69.0)
-        angle = ((orig_px - frame_w / 2.0) / frame_w) * hfov_rad
-        x_cam = distance_m * math.tan(angle)
+
+def get_person_relative_position_m(depth_frame, center_pt, frame_w, frame_h, depth_intrinsics, distance_m):
+    import math
+    import pyrealsense2 as rs
+    
+    if len(center_pt) == 4:
+        x1, y1, x2, y2 = map(int, center_pt)
+        center_x = (x1 + x2) // 2
+        center_y = (y1 + y2) // 2
     else:
-        x_cam = (orig_px - depth_intrinsics.ppx) / depth_intrinsics.fx * distance_m
-    return (distance_m, -x_cam) # (forward_m, left_m)
+        center_x, center_y = map(int, center_pt)
+        
+    orig_px = float(frame_w - 1 - center_x)
+    orig_py = float(center_y)
+    
+    if distance_m <= 0: return None
+    
+    if depth_intrinsics is not None:
+        point_3d = rs.rs2_deproject_pixel_to_point(depth_intrinsics, [orig_px, orig_py], distance_m)
+        x_opt, y_opt, z_opt = point_3d[0], point_3d[1], point_3d[2]
+    else:
+        hfov_rad = math.radians(69.0)
+        vfov_rad = math.radians(42.0)
+        angle_x = ((orig_px - frame_w / 2.0) / frame_w) * hfov_rad
+        angle_y = ((orig_py - frame_h / 2.0) / frame_h) * vfov_rad
+        x_opt = distance_m * math.tan(angle_x)
+        y_opt = distance_m * math.tan(angle_y)
+        z_opt = distance_m
+
+    pitch_rad = math.radians(20.0)
+    forward_m = z_opt * math.cos(pitch_rad) - y_opt * math.sin(pitch_rad)
+    left_m = -x_opt
+    
+    down_m = z_opt * math.sin(pitch_rad) + y_opt * math.cos(pitch_rad)
+    camera_height_m = 1.8
+    z_m = camera_height_m - down_m
+    
+    return forward_m, left_m, z_m
 
 class tracking_loop:
     def __init__(self):
+        import torch
+        self.device = 0 if torch.cuda.is_available() else 'cpu'
         self.nav = MirNavigator()
-        # Tải mô hình YOLO Pose chuyên dụng cho con người để lấy khung xương (Keypoints)
-        self.model = YOLO('yolo11n-pose.pt')
-        
-        self.pipeline = rs.pipeline()
-        config = rs.config()
-        config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
-        config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
-        
         self.camera_ready = False
-        try:
-            self.pipeline.start(config)
-            self.camera_ready = True
-            self.align = rs.align(rs.stream.color)
-            
-            profile = self.pipeline.get_active_profile()
-            depth_profile = profile.get_stream(rs.stream.depth).as_video_stream_profile()
-            self.depth_intrinsics = depth_profile.get_intrinsics()
-        except RuntimeError as e:
-            rospy.logerr(f"❌ KHÔNG TÌM THẤY CAMERA REALSENSE: {e}")
-            self.depth_intrinsics = None
-
-        mp_hands = mp.solutions.hands
-        self.hands_detector = mp_hands.Hands(max_num_hands=2, min_detection_confidence=0.5, min_tracking_confidence=0.5)
+        self.depth_intrinsics = None
+        self.robot_state = "IDLE"  # IDLE, LOCKED, COLLECTING, MOVING
+        self.locked_target_id = None
 
         self.robot_state = "IDLE"  # IDLE, LOCKED, COLLECTING, MOVING
         self.locked_target_id = None
@@ -549,14 +570,43 @@ class tracking_loop:
         self.worker_thread.start()
 
     def run(self):
+        global goal_pose, user_pose, robot_planned_path
+        print("⏳ Đang khởi động mô hình AI (YOLO11n & MediaPipe) trong luồng ngầm...")
+        # Tải mô hình YOLO Pose và Segmentation
+        self.model_pose = YOLO('yolo11n-pose.pt')
+        self.model_seg = YOLO('yolo11n-seg.pt')
+        if self.device == 0:
+            rospy.loginfo("[AI] Phát hiện GPU RTX! Đang đưa model lên CUDA...")
+            self.model_pose.to('cuda')
+            self.model_seg.to('cuda')
+        
+        # Khởi tạo Camera RealSense
+        print("⏳ Đang kết nối Camera RealSense 3D...")
+        self.pipeline = rs.pipeline()
+        config = rs.config()
+        config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
+        config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
+        try:
+            self.pipeline.start(config)
+            self.camera_ready = True
+            self.align = rs.align(rs.stream.color)
+            profile = self.pipeline.get_active_profile()
+            depth_profile = profile.get_stream(rs.stream.depth).as_video_stream_profile()
+            self.depth_intrinsics = depth_profile.get_intrinsics()
+            print("✅ Đã kết nối Camera RealSense thành công!")
+        except RuntimeError as e:
+            rospy.logerr(f"❌ KHÔNG TÌM THẤY CAMERA REALSENSE: {e}")
+            self.depth_intrinsics = None
+
+        import mediapipe as mp
+        self.hands_detector = mp.solutions.hands.Hands(max_num_hands=2, min_detection_confidence=0.5, min_tracking_confidence=0.5)
+        print("🚀 Đã khởi động toàn bộ AI thành công! Bắt đầu quét mục tiêu...")
+        
         # Thiết lập cập nhật UI nếu không có camera
         if not self.camera_ready:
             signal_bus.status_update.emit(f"Lỗi: Không kết nối Camera 3D! Vẫn chờ /map")
+            print("❌ LỖI: Camera không khả dụng. Giao diện sẽ hiển thị màn hình chờ.")
         
-        print("⏳ Đang khởi động mô hình AI (YOLO11n & MediaPipe)...")
-        self.model = YOLO('yolo11n-pose.pt')
-        self.model_seg = YOLO('yolo11n-seg.pt') # Thêm model Segmentation để bóc tách chuẩn xác
-
         while not rospy.is_shutdown():
             if not self.camera_ready:
                 rospy.sleep(1)
@@ -572,22 +622,28 @@ class tracking_loop:
             frame = cv2.flip(frame, 1)
             frame_h, frame_w = frame.shape[:2]
 
-            # 0. Tối ưu MediaPipe: CHỈ bật khi Robot đang đứng yên (IDLE) hoặc đã áp sát mục tiêu (đến bàn)
+            # 1. YOLO Nhận diện Người (Tối ưu RTX 3050 - Tensor Core FP16)
+            # Dùng Half Precision (FP16) giúp RTX 3050 chạy inference nhanh gấp đôi
+            # Tracker chỉ cần trên Pose để giữ ID liên tục
+            results_pose = self.model_pose.track(frame, conf=0.45, persist=True, tracker="bytetrack.yaml", verbose=False, half=(self.device==0), device=self.device)
+            # Segmentation không cần tracker, chỉ cần cắt mặt nạ frame hiện tại
+            results_seg = self.model_seg.predict(frame, conf=0.45, verbose=False, half=(self.device==0), device=self.device)
+
+            # 2. Tối ưu MediaPipe: CHỈ bật khi Robot đang đứng yên (IDLE) hoặc đã áp sát mục tiêu (đến bàn)
             need_mediapipe = False
             if self.robot_state == "IDLE":
                 need_mediapipe = True
                 
-            # Lấy trước khoảng cách thô để biết đã áp sát chưa
-            results = self.model.track(frame, conf=0.45, persist=True, tracker="bytetrack.yaml", verbose=False)
-            results_seg = self.model_seg.predict(frame, conf=0.45, verbose=False) # Chạy Seg
-            
             if self.locked_target_id is not None and getattr(self, 'locked_bbox', None):
                 bx1, by1, bx2, by2 = self.locked_bbox
-                d_rough = get_depth_distance_m(depth_frame, (bx1, by1, bx2, by2), frame_w, frame_h)
-                if d_rough > 0 and d_rough <= STOP_DISTANCE + 0.5:
-                    need_mediapipe = True
+                # Đo lặp nhanh để quyết định có bật MediaPipe không
+                center_x, center_y = (bx1 + bx2) // 2, (by1 + by2) // 2
+                orig_px = int(frame_w - 1 - center_x)
+                if 0 <= orig_px < frame_w and 0 <= center_y < frame_h:
+                    d_rough = depth_frame.get_distance(orig_px, int(center_y))
+                    if d_rough > 0 and d_rough <= STOP_DISTANCE + 0.5:
+                        need_mediapipe = True
 
-            # 1. MediaPipe ngón tay (CHỈ CHẠY KHI CẦN)
             detected_hands = []
             if need_mediapipe:
                 rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -611,70 +667,44 @@ class tracking_loop:
                         wrist = hand_landmarks.landmark[0]
                         hx, hy = int(wrist.x * frame_w), int(wrist.y * frame_h)
                         detected_hands.append((hx, hy, fingers, open5_strict))
-
             curr_time = time.time()
-            seg_boxes = results_seg[0].boxes if len(results_seg) > 0 and results_seg[0].boxes else None
-            seg_masks = results_seg[0].masks if len(results_seg) > 0 and results_seg[0].masks else None
             
             # --- LOGIC TỰ CHUYỂN ID KHI MẤT DẤU (Chống đổi ID) ---
             current_people = []
             is_target_in_frame = False
-            for result in results:
-                if result.boxes is None: continue
-                for box in result.boxes:
-                    if int(box.cls[0].item()) == 0:
-                        tid = int(box.id[0].item()) if box.id is not None else -1
-                        bx1, by1, bx2, by2 = box.xyxy[0].cpu().numpy()
-                        current_people.append({"id": tid, "box": (bx1, by1, bx2, by2)})
-                        if tid == self.locked_target_id:
-                            is_target_in_frame = True
-                            self.locked_bbox = (bx1, by1, bx2, by2)
+            for result_pose in results_pose:
+                if result_pose.boxes is None: continue
+                boxes = result_pose.boxes
+                keypoints = getattr(result_pose, "keypoints", None)
 
-            if self.locked_target_id is not None and not is_target_in_frame and hasattr(self, 'locked_bbox') and self.locked_bbox is not None:
-                lx1, ly1, lx2, ly2 = self.locked_bbox
-                lcx, lcy = (lx1 + lx2) / 2, (ly1 + ly2) / 2
-                best_match_id = None
-                min_dist = float('inf')
-                for p in current_people:
-                    px1, py1, px2, py2 = p["box"]
-                    pcx, pcy = (px1 + px2) / 2, (py1 + py2) / 2
-                    dist = ((pcx - lcx)**2 + (pcy - lcy)**2)**0.5
-                    if dist < 150 and dist < min_dist:
-                        min_dist = dist
-                        best_match_id = p["id"]
-                        self.locked_bbox = p["box"]
+                # Match with segmentation result
+                seg_result = results_seg[0] if len(results_seg) > 0 else None
+                seg_boxes = seg_result.boxes if seg_result and seg_result.boxes else None
                 
-                if best_match_id is not None:
-                    print(f"[TARGET] Đã cập nhật ID mục tiêu: {self.locked_target_id} -> {best_match_id} (Do nhầm lẫn ID)")
-                    self.locked_target_id = best_match_id
-                    if hasattr(self, 'target_lost_time'):
-                        del self.target_lost_time
-
-            for result in results:
-                if result.boxes is None: continue
-                boxes = result.boxes
-                keypoints = getattr(result, "keypoints", None)
-
                 for i, box in enumerate(boxes):
                     cls = int(box.cls[0].cpu().item())
                     if cls != 0: continue # Chi theo con nguoi
                     
                     track_id = int(box.id[0].item()) if box.id is not None else -1
+                    x1, y1, x2, y2 = box.xyxy[0].cpu().numpy()
+                    
                     # Segmentation Depth
                     poly_pts = None
-                    if seg_boxes is not None and seg_masks is not None:
+                    if seg_boxes is not None and seg_result.masks is not None:
+                        # Find matching box in seg_boxes by IoU or center distance
                         best_j = -1
-                        min_dist_seg = float('inf')
+                        min_dist = float('inf')
                         for j, sbox in enumerate(seg_boxes):
                             sx1, sy1, sx2, sy2 = sbox.xyxy[0].cpu().numpy()
                             sc_x, sc_y = (sx1+sx2)/2, (sy1+sy2)/2
                             bc_x, bc_y = (x1+x2)/2, (y1+y2)/2
                             dist = (sc_x-bc_x)**2 + (sc_y-bc_y)**2
-                            if dist < min_dist_seg and dist < 2500:
-                                min_dist_seg = dist
+                            if dist < min_dist and dist < 2500: # Centers must be within 50px
+                                min_dist = dist
                                 best_j = j
-                        if best_j != -1 and len(seg_masks.xy) > best_j:
-                            poly_pts = seg_masks.xy[best_j]
+                        
+                        if best_j != -1 and len(seg_result.masks.xy) > best_j:
+                            poly_pts = seg_result.masks.xy[best_j]
                             
                     if poly_pts is not None and len(poly_pts) > 0:
                         d_m = get_depth_distance_m_seg(depth_frame, poly_pts, frame_w, frame_h)
@@ -684,31 +714,63 @@ class tracking_loop:
                     delta_h = 1.8 - 0.6
                     d_ngang_m = math.sqrt(d_m**2 - delta_h**2) if d_m > delta_h else d_m
 
-                    # Kiem tra Gio tay (qua vai)
+                    # Kiem tra Gio tay (YOLO Pose)
                     is_raising = False
                     if keypoints and keypoints.data is not None and i < len(keypoints.data):
                         kpts = keypoints.data[i].cpu().numpy()
                         if len(kpts) >= 11:
-                            ls, rs, lw, rw = kpts[5], kpts[6], kpts[9], kpts[10]
+                            ls, r_sho, lw, rw = kpts[5], kpts[6], kpts[9], kpts[10]
                             def v_kpt(k): return k[2]>0.4 if len(k)>=3 else (k[0]>0 and k[1]>0)
                             if v_kpt(ls) and v_kpt(lw) and lw[1] < ls[1]: is_raising = True
-                            if v_kpt(rs) and v_kpt(rw) and rw[1] < rs[1]: is_raising = True
-
-                    # Kiem tra open5 & fist cho rieng khoi box nay
+                            if v_kpt(r_sho) and v_kpt(rw) and rw[1] < r_sho[1]: is_raising = True
+                            
+                        # Lay tam nguoi dung tu 2 vai, hoac mui
+                        person_center_x, person_center_y = (x1 + x2) // 2, (y1 + y2) // 2
+                        if len(kpts) >= 11:
+                            ls, r_sho, nose = kpts[5], kpts[6], kpts[0]
+                            if v_kpt(ls) and v_kpt(r_sho):
+                                person_center_x = int((ls[0] + r_sho[0]) / 2)
+                                person_center_y = int((ls[1] + r_sho[1]) / 2)
+                            elif v_kpt(nose):
+                                person_center_x, person_center_y = int(nose[0]), int(nose[1])
+                    else:
+                        person_center_x, person_center_y = (x1 + x2) // 2, (y1 + y2) // 2
+                    
                     has_open_five = False
                     has_fist = False
                     open5_flags = []
                     fing_for_unlock = []
                     
-                    if is_raising:
-                        for hx, hy, f, o5 in detected_hands:
-                            if x1 <= hx <= x2 and y1 <= hy <= y2:
-                                open5_flags.append(o5)
-                                fing_for_unlock.append(f)
-                    else:
-                        for hx, hy, f, o5 in detected_hands:
-                            if x1 <= hx <= x2 and y1 <= hy <= y2:
-                                fing_for_unlock.append(f)
+                    for hx, hy, f, o5 in detected_hands:
+                        if x1 <= hx <= x2 and y1 <= hy <= y2:
+                            is_my_hand = False
+                            
+                            # Lớp lọc 1: Khoảng cách từ Bàn tay (MediaPipe) đến Cổ tay (YOLO Pose)
+                            # Nếu đây là tay của người này, nó phải nằm sát cổ tay của họ.
+                            if len(kpts) >= 11:
+                                dist_l = math.hypot(hx - lw[0], hy - lw[1]) if v_kpt(lw) else float('inf')
+                                dist_r = math.hypot(hx - rw[0], hy - rw[1]) if v_kpt(rw) else float('inf')
+                                if min(dist_l, dist_r) < 100: # Tay nằm trong phạm vi 100 pixel từ cổ tay
+                                    is_my_hand = True
+                                    
+                            # Lớp lọc 2: Khoảng cách không gian (Depth)
+                            # Lấy chiều sâu thực tế của bàn tay
+                            orig_hx = frame_w - 1 - hx
+                            if 0 <= orig_hx < frame_w and 0 <= hy < frame_h:
+                                hand_depth = depth_frame.get_distance(orig_hx, hy)
+                                if hand_depth > 0 and abs(hand_depth - d_m) < 0.6: # Bàn tay không thể cách thân người quá 60cm
+                                    is_my_hand = True
+                                    
+                            # Nếu có khung xương Pose nhưng tay không sát cổ tay, VÀ độ sâu không khớp -> ĐÂY LÀ TAY NGƯỜI KHÁC!
+                            if not is_my_hand and len(kpts) >= 11:
+                                continue 
+                                
+                            fing_for_unlock.append(f)
+                            # Kiem tra neu ban tay duoc gio len cao (khuyu tay > 45% than)
+                            if hy < (y1 + 0.45 * (y2 - y1)):
+                                is_raising = True
+                                if o5:
+                                    has_open_five = True
 
                     if open5_flags: has_open_five = any(open5_flags)
                     if fing_for_unlock: has_fist = any(f <= 1 for f in fing_for_unlock)
@@ -716,23 +778,26 @@ class tracking_loop:
 
                     # --- LOGIC GẮN KHÓA (LOCK TARGET) ---
                     if track_id != -1 and self.locked_target_id is None:
-                        if is_raising and has_open_five:
+                        if is_raising and has_open_five and d_ngang_m <= 5.0:
                             self.open5_confirm_count[track_id] = self.open5_confirm_count.get(track_id, 0) + 1
+                            if track_id not in self.hand_raise_start:
+                                self.hand_raise_start[track_id] = curr_time
                         else:
-                            self.open5_confirm_count.pop(track_id, None)
-                            self.hand_raise_start.pop(track_id, None)
-
-                        if self.open5_confirm_count.get(track_id, 0) >= 3:
-                            if track_id not in self.hand_raise_start: self.hand_raise_start[track_id] = curr_time
-                            hold_time = curr_time - self.hand_raise_start[track_id]
-                            
-                            cv2.putText(frame, f"DANG KHOA TARGET: {hold_time:.1f}s/5s", (int(x1), int(y1)-30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
-                            if hold_time >= 5.0:
-                                self.locked_target_id = track_id
-                                self.locked_bbox = (x1, y1, x2, y2)
-                                self.robot_state = "COLLECTING"
-                                signal_bus.status_update.emit(f"ĐÃ KHÓA ! Đang tải dữ liệu không gian...")
-                                threading.Thread(target=self.acquire_coords_and_navigate, args=(d_m, x1, y1, x2, y2), daemon=True).start()
+                            count = self.open5_confirm_count.get(track_id, 0)
+                            if count > 0: self.open5_confirm_count[track_id] = count - 1
+                            else: self.hand_raise_start.pop(track_id, None)
+                        
+                        if self.open5_confirm_count.get(track_id, 0) >= 2:
+                            if track_id in self.hand_raise_start:
+                                hold_time = curr_time - self.hand_raise_start[track_id]
+                                cv2.putText(frame, f"DANG KHOA TARGET: {hold_time:.1f}s/5s", (int(x1), int(y1)-30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
+                                if hold_time >= 5.0:
+                                    self.locked_target_id = track_id
+                                    self.locked_bbox = (x1, y1, x2, y2)
+                                    self.robot_state = "COLLECTING"
+                                    signal_bus.status_update.emit(f"ĐÃ KHÓA ! Đang tải dữ liệu không gian...")
+                                    self.locked_center_pt = (person_center_x, person_center_y)
+                                    threading.Thread(target=self.acquire_coords_and_navigate, args=(d_m, self.locked_center_pt), daemon=True).start()
 
                     # --- LOGIC MỞ KHÓA (UNLOCK TARGET - Bằng Năm đấm) ---
                     if track_id != -1 and track_id == self.locked_target_id:
@@ -750,6 +815,7 @@ class tracking_loop:
                                 self.nav.cancel_all()
                                 self.locked_target_id = None
                                 self.robot_state = "IDLE"
+                                goal_pose = None; user_pose = None; robot_planned_path = []
                                 signal_bus.status_update.emit(f"Trạng thái: Đang theo dõi người dùng")
 
                     # Cập nhật Giao diện Box
@@ -774,6 +840,11 @@ class tracking_loop:
                         txt_color = (0, 0, 255) if is_too_close else (0, 255, 0)
                         if is_too_close: dist_str += " (Qua gan)"
                         cv2.putText(frame, dist_str, (int(x1), int(y1)-5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, txt_color, 2)
+                        
+                        # Chỉ in log lên Terminal sau mỗi 1 giây để đỡ giật màn hình
+                        if not hasattr(self, 'last_print_time') or curr_time - self.last_print_time > 1.0:
+                            print(f"[Tracking] Người dùng ID {track_id} đang ở khoảng cách: {d_ngang_m:.2f}m")
+                            self.last_print_time = curr_time
 
             # Tự động mở khóa nếu mục tiêu mất dấu quá 3 giây
             if self.locked_target_id is not None:
@@ -785,6 +856,7 @@ class tracking_loop:
                         self.nav.cancel_all()
                         self.locked_target_id = None
                         self.robot_state = "IDLE"
+                        goal_pose = None; user_pose = None; robot_planned_path = []
                         signal_bus.status_update.emit("Mất dấu mục tiêu > 3s! Đã tự mở khóa.")
                         del self.target_lost_time
                 else:
@@ -793,11 +865,13 @@ class tracking_loop:
 
             signal_bus.frame_update.emit(frame)
 
-    def acquire_coords_and_navigate(self, distance_m, x1, y1, x2, y2):
-        rel = get_person_relative_position_m(None, (x1, y1, x2, y2), 640, 480, self.depth_intrinsics, distance_m)
+    def acquire_coords_and_navigate(self, distance_m, center_pt):
+        global goal_pose, user_pose, robot_planned_path, tf_listener, map_data, map_resolution, map_origin_x, map_origin_y
+        rel = get_person_relative_position_m(None, center_pt, 640, 480, self.depth_intrinsics, distance_m)
         if rel is None:
             self.robot_state = "IDLE"
             self.locked_target_id = None
+            goal_pose = None; user_pose = None; robot_planned_path = []
             return
         
         time.sleep(2)
@@ -805,7 +879,6 @@ class tracking_loop:
         camera_offset_x = 0.475
         forward_m, left_m = rel[0] - camera_offset_x, rel[1]
         
-        global tf_listener, goal_pose
         if tf_listener is not None:
             try:
                 msg = PointStamped()
@@ -820,6 +893,8 @@ class tracking_loop:
                 pt = tf_listener.transformPoint("/map", msg)
                 target_x, target_y = pt.point.x, pt.point.y
                 
+                user_pose = (target_x, target_y)
+                
                 robot_x, robot_y = robot_pose[0], robot_pose[1]
                 dx, dy = target_x - robot_x, target_y - robot_y
                 dist_to_target = math.hypot(dx, dy)
@@ -832,10 +907,124 @@ class tracking_loop:
                     self.robot_state = "IDLE"
                     self.locked_target_id = None
                     return
-                ratio = (dist_to_target - STOP_DISTANCE) / dist_to_target
-                final_goal_x = robot_x + dx * ratio
-                final_goal_y = robot_y + dy * ratio
-                final_yaw = math.atan2(dy, dx)
+                # -- THUẬT TOÁN TÌM ĐIỂM DỪNG THÔNG MINH TRÁNH BÀN GHẾ --
+                
+                valid_goal_found = False
+                search_distance = STOP_DISTANCE
+                final_goal_x, final_goal_y = robot_x, robot_y # Fallback
+                
+                while search_distance < dist_to_target:
+                    ratio = (dist_to_target - search_distance) / dist_to_target
+                    test_x = robot_x + dx * ratio
+                    test_y = robot_y + dy * ratio
+                    
+                    if map_data is not None and map_resolution > 0:
+                        grid_x = int((test_x - map_origin_x) / map_resolution)
+                        grid_y = int((test_y - map_origin_y) / map_resolution)
+                        
+                        h, w = map_data.shape
+                        if 0 <= grid_x < w and 0 <= grid_y < h:
+                            is_safe = True
+                            # Kiểm tra bán kính 40cm xung quanh điểm test xem có đâm vào bàn ghế không
+                            safe_radius_px = int(0.4 / map_resolution) 
+                            for check_y in range(max(0, grid_y - safe_radius_px), min(h, grid_y + safe_radius_px)):
+                                for check_x in range(max(0, grid_x - safe_radius_px), min(w, grid_x + safe_radius_px)):
+                                    if map_data[check_y, check_x] > 50: # Có vật cản (100)
+                                        is_safe = False
+                                        break
+                                if not is_safe:
+                                    break
+                                    
+                            if is_safe:
+                                final_goal_x, final_goal_y = test_x, test_y
+                                valid_goal_found = True
+                                break
+                    else:
+                        # Nếu không có map, cứ lấy điểm mặc định
+                        final_goal_x, final_goal_y = test_x, test_y
+                        valid_goal_found = True
+                        break
+                        
+                    # Nếu vướng bàn, lùi xa người ra thêm 15cm về phía robot và thử lại
+                    search_distance += 0.15
+
+                if not valid_goal_found:
+                    rospy.logwarn("[MirNav] Không tìm thấy chỗ đứng an toàn (Người đứng quá sát bàn/tường).")
+                    self.robot_state = "IDLE"
+                    self.locked_target_id = None
+                    return
+                
+                # Tính góc Yaw hướng mặt vào người dùng (Mặc định)
+                look_dx = target_x - final_goal_x
+                look_dy = target_y - final_goal_y
+                final_yaw = math.atan2(look_dy, look_dx)
+                
+                # -- NÂNG CẤP: DÒ VIỀN BÀN ĐỂ ĐỖ VUÔNG GÓC (Từ GitHub) --
+                try:
+                    if map_data is not None and map_resolution > 0:
+                        import numpy as np
+                        import cv2
+                        px_t = int((target_x - map_origin_x) / map_resolution)
+                        py_t = int((target_y - map_origin_y) / map_resolution)
+                        
+                        # Cắt vùng bản đồ 4x4m quanh khách hàng
+                        win_px = int(4.0 / map_resolution)
+                        h_map, w_map = map_data.shape
+                        x1_m = max(0, px_t - win_px//2)
+                        x2_m = min(w_map, px_t + win_px//2)
+                        y1_m = max(0, py_t - win_px//2)
+                        y2_m = min(h_map, py_t + win_px//2)
+                        
+                        # Rút trích viền bàn (Vật cản > 50)
+                        local_mask = np.where(map_data[y1_m:y2_m, x1_m:x2_m] > 50, 255, 0).astype(np.uint8)
+                        contours, _ = cv2.findContours(local_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                        
+                        best_contour = None
+                        min_dist = float('inf')
+                        for cnt in contours:
+                            if cv2.contourArea(cnt) < 5: continue
+                            # Chuyển contour về hệ pixel của toàn map
+                            cnt_global = cnt + np.array([[[x1_m, y1_m]]])
+                            dist = cv2.pointPolygonTest(cnt_global, (px_t, py_t), True)
+                            
+                            # Nếu khách đè lên mép bàn (dist >= 0) hoặc lấy mép bàn gần nhất
+                            if dist >= 0:
+                                best_contour = cnt_global
+                                break
+                            if abs(dist) < min_dist:
+                                min_dist = abs(dist)
+                                best_contour = cnt_global
+                        
+                        if best_contour is not None:
+                            # Bao khung hình chữ nhật cho cái bàn
+                            rect = cv2.minAreaRect(best_contour)
+                            box = cv2.boxPoints(rect)
+                            
+                            goal_px_x = (final_goal_x - map_origin_x) / map_resolution
+                            goal_px_y = (final_goal_y - map_origin_y) / map_resolution
+                            
+                            closest_edge_center = None
+                            min_edge_dist = float('inf')
+                            
+                            # Tìm cạnh bàn gần nhất với điểm robot đỗ
+                            for i in range(4):
+                                p1 = box[i]
+                                p2 = box[(i+1)%4]
+                                edge_center = ((p1[0]+p2[0])/2.0, (p1[1]+p2[1])/2.0)
+                                dist_to_goal = math.hypot(edge_center[0] - goal_px_x, edge_center[1] - goal_px_y)
+                                if dist_to_goal < min_edge_dist:
+                                    min_edge_dist = dist_to_goal
+                                    closest_edge_center = edge_center
+                            
+                            if closest_edge_center is not None:
+                                # Tính Yaw chĩa vuông góc tắp vào mép bàn thay vì chĩa vào người
+                                look_dx_edge = closest_edge_center[0] - goal_px_x
+                                look_dy_edge = closest_edge_center[1] - goal_px_y
+                                final_yaw = math.atan2(look_dy_edge, look_dx_edge)
+                                rospy.loginfo("[MirNav] Đã kích hoạt Yaw nội suy mép bàn (Vuông góc)!")
+                except Exception as e:
+                    rospy.logwarn(f"[MirNav] Lỗi nội suy mép bàn (Sẽ dùng Yaw HRI mặc định): {e}")
+                    
                 goal_pose = (final_goal_x, final_goal_y)
                 
                 signal_bus.status_update.emit(f"Chỉ định Đích: Navigation ({final_goal_x:.1f}, {final_goal_y:.1f})")
