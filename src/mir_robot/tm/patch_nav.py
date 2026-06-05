@@ -1,4 +1,4 @@
-with open('/home/tuanminh/mir_project/src/mir_robot/tm/testpc.py', 'r') as f:
+with open('/home/dung/mir_project/src/mir_robot/tm/testpc.py', 'r') as f:
     text = f.read()
 
 rep1 = """            q = tf.transformations.quaternion_from_euler(0, 0, yaw)
@@ -36,6 +36,6 @@ text = text.replace("""        q = tf.transformations.quaternion_from_euler(0, 0
         if self.robot:
             nav.ws_send_goal(self.robot, diem_dong)""", rep2)
 
-with open('/home/tuanminh/mir_project/src/mir_robot/tm/testpc.py', 'w') as f:
+with open('/home/dung/mir_project/src/mir_robot/tm/testpc.py', 'w') as f:
     f.write(text)
 

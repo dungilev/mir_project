@@ -1,4 +1,4 @@
-with open('/home/tuanminh/mir_project/src/mir_robot/tm/testpc.py', 'r') as f:
+with open('/home/dung/mir_project/src/mir_robot/tm/testpc.py', 'r') as f:
     text = f.read()
 
 text = text.replace("if __name__ == '__main__':", """def main():
@@ -9,5 +9,5 @@ text = text.replace("if __name__ == '__main__':", """def main():
 
 if __name__ == '__main__':""")
 
-with open('/home/tuanminh/mir_project/src/mir_robot/tm/testpc.py', 'w') as f:
+with open('/home/dung/mir_project/src/mir_robot/tm/testpc.py', 'w') as f:
     f.write(text)

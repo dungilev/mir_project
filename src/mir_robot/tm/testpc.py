@@ -257,7 +257,7 @@ class VideoThread(QThread):
         super().__init__()
         self._run_flag = True
         self.is_scanning = False 
-        self.model = YOLO("/home/tuanminh/mir_project/yolo11n.pt") 
+        self.model = YOLO("/home/dung/mir_project/yolo11n.pt") 
         self.mp_hands = mp.solutions.hands
         self.hands = self.mp_hands.Hands(static_image_mode=False, max_num_hands=2, min_detection_confidence=0.7)
 
@@ -349,7 +349,7 @@ class VideoThread(QThread):
                         # === XUẤT LƯỚI POINTCLOUD RA FILE 3D (.ply) ===
                         try:
                             # Sẽ xuất nguyên mây điểm và áp map màu rgb
-                            ply_path = "/home/tuanminh/mir_project/pointcloud_mesh.ply"
+                            ply_path = "/home/dung/mir_project/pointcloud_mesh.ply"
                             # SỬA LỖI: dùng object 'points' thay vì 'self.pc'
                             points.export_to_ply(ply_path, color_frame)
                             print(f"[POINTCLOUD] Đã xuất thành công lưới 3D (Mesh) ra file: {ply_path}")

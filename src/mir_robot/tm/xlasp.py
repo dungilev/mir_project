@@ -17,7 +17,7 @@ except ImportError as e:
 
 def main():
     # 1. Đường dẫn đến file model của bạn 
-    model_path = '/home/tuanminh/mir_project/src/mir_robot/tm/best/best.pt'
+    model_path = '/home/dung/mir_project/src/mir_robot/tm/best/best.pt'
     
     if not os.path.exists(model_path):
         print(f"❌ Không tìm thấy file model tại: {model_path}")

@@ -199,7 +199,7 @@ class VideoThread(QThread):
         self.is_scanning_for_hand = False 
         
         print("[INFO] Đang tải mô hình cảnh báo người YOLO11n...")
-        self.model = YOLO("/home/tuanminh/mir_project/yolo11n.pt") 
+        self.model = YOLO("yolo11n.pt") 
         self.mp_hands = mp.solutions.hands
         self.hands = self.mp_hands.Hands(static_image_mode=False, max_num_hands=2, min_detection_confidence=0.7)
 
@@ -342,7 +342,7 @@ class MainApp(QMainWindow):
         
         # Load Laptop YOLO Model
         rospy.loginfo("Đang tải YOLO Laptop (Đồ uống)...")
-        abs_path = '/home/tuanminh/mir_project/src/mir_robot/tm/best/best.pt'
+        abs_path = '/home/dung/mir_project/src/mir_robot/tm/best/best.pt'
         rel_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'best', 'best.pt')
         model_path = abs_path if os.path.exists(abs_path) else rel_path
         

@@ -1,5 +1,5 @@
 import re
-with open('/home/tuanminh/mir_project/src/mir_robot/tm/xlanav/vis.py', 'r') as f:
+with open('/home/dung/mir_project/src/mir_robot/tm/xlanav/vis.py', 'r') as f:
     content = f.read()
 
 # Sửa lại đoạn lặp lấy frame
@@ -19,5 +19,5 @@ new_loop = """            try:
                 rospy.logwarn(f"Lỗi frame camera: {e}")
                 continue"""
 content = re.sub(r'            try:.*?\n                if getattr.*?color_frame\.get_data\(\)\)[\n ]*', new_loop + '\n', content, flags=re.DOTALL)
-with open('/home/tuanminh/mir_project/src/mir_robot/tm/xlanav/vis.py', 'w') as f:
+with open('/home/dung/mir_project/src/mir_robot/tm/xlanav/vis.py', 'w') as f:
     f.write(content)

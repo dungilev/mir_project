@@ -37,7 +37,7 @@ class MainControlMinimal:
         
         # --- TẢI MODEL YOLO SẴN NHƯNG ÉP CHẠY BẰNG CHIP CPU BÊN TRONG DOCKER ---
         # Kiểm tra cả 2 đường dẫn (tuyệt đối của máy thực và tương đối trong Docker)
-        abs_path = '/home/tuanminh/mir_project/src/mir_robot/tm/best/best.pt'
+        abs_path = '/home/dung/mir_project/src/mir_robot/tm/best/best.pt'
         rel_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'best', 'best.pt')
         
         model_path = abs_path if os.path.exists(abs_path) else rel_path

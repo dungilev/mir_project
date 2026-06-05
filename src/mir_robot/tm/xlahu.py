@@ -114,7 +114,7 @@ class VideoThread(QThread):
         # CHỐNG GIẬT: Đổi xuống mô hình YOLO11n (Nano) siêu nhẹ, cho tốc độ 60+ FPS
         # Việc tăng khung hình sẽ giúp Tracker (ByteTrack) chạy chính xác hơn, không bị nhảy loạn ID
         print("[INFO] Đang tải mô hình cảnh báo người YOLO11n (Siêu Tốc Độ)...")
-        self.model = YOLO("/home/tuanminh/mir_project/yolo11n.pt") 
+        self.model = YOLO("/home/dung/mir_project/yolo11n.pt") 
         print("[INFO] Tải YOLO thành công!")
 
         # Khởi tạo MediaPipe Hand để nhận diện tay

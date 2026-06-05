@@ -1,5 +1,5 @@
 import re
-with open('/home/tuanminh/mir_project/src/mir_robot/tm/xlanav/vis.py', 'r') as f:
+with open('/home/dung/mir_project/src/mir_robot/tm/xlanav/vis.py', 'r') as f:
     content = f.read()
 
 # Thêm biến cờ fallback
@@ -24,5 +24,5 @@ run_match = re.search(r'    def run\(self\):.*?while not rospy\.is_shutdown\(\):
 if run_match:
     pass
 
-with open('/home/tuanminh/mir_project/src/mir_robot/tm/xlanav/vis.py', 'w') as f:
+with open('/home/dung/mir_project/src/mir_robot/tm/xlanav/vis.py', 'w') as f:
     f.write(content)

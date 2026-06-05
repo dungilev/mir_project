@@ -113,7 +113,7 @@ def run_visual_servoing(is_test=False):
 
     # 2. Tải model YOLO
     try:
-        model = YOLO("/home/tuanminh/mir_project/yolo11n.pt")
+        model = YOLO("/home/dung/mir_project/yolo11n.pt")
     except Exception as e:
         print(f"[ERR] Không thể tải model YOLO: {e}")
         pipeline.stop()

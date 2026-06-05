@@ -236,7 +236,7 @@ class VideoThread(QThread):
         super().__init__()
         self._run_flag = True
         self.is_scanning = False 
-        self.model = YOLO("/home/tuanminh/mir_project/yolo11n.pt") 
+        self.model = YOLO("/home/dung/mir_project/yolo11n.pt") 
         self.mp_hands = mp.solutions.hands
         self.hands = self.mp_hands.Hands(static_image_mode=False, max_num_hands=2, min_detection_confidence=0.7)
 

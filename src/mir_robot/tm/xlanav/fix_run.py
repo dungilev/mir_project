@@ -1,5 +1,5 @@
 import re
-with open('/home/tuanminh/mir_project/src/mir_robot/tm/xlanav/vis.py', 'r') as f:
+with open('/home/dung/mir_project/src/mir_robot/tm/xlanav/vis.py', 'r') as f:
     lines = f.readlines()
 
 new_lines = []
@@ -26,5 +26,5 @@ for line in lines:
     else:
         new_lines.append(line)
 
-with open('/home/tuanminh/mir_project/src/mir_robot/tm/xlanav/vis.py', 'w') as f:
+with open('/home/dung/mir_project/src/mir_robot/tm/xlanav/vis.py', 'w') as f:
     f.writelines(new_lines)

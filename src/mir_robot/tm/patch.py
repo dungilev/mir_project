@@ -1,7 +1,7 @@
 import sys
 import re
 
-with open('/home/tuanminh/mir_project/src/mir_robot/tm/mainv3.py', 'r') as f:
+with open('/home/dung/mir_project/src/mir_robot/tm/mainv3.py', 'r') as f:
     main_code = f.read()
     
 # Extract calculate_geometry_safe_goal from mainv3
@@ -80,7 +80,7 @@ geom_code = geom_code.replace(
 )
 
 
-with open('/home/tuanminh/mir_project/src/mir_robot/tm/testpc.py', 'r') as f:
+with open('/home/dung/mir_project/src/mir_robot/tm/testpc.py', 'r') as f:
     testpc_code = f.read()
 
 # Replace process_raycast_safe_goal logic
@@ -92,6 +92,6 @@ testpc_code = testpc_code.replace('self.map_label.clicked_signal.connect(self.pr
 testpc_code = testpc_code.replace('self.video_thread.target_locked_signal.connect(self.process_raycast_safe_goal)', 'self.video_thread.target_locked_signal.connect(self.calculate_hybrid_safe_goal)')
 
 
-with open('/home/tuanminh/mir_project/src/mir_robot/tm/testpc.py', 'w') as f:
+with open('/home/dung/mir_project/src/mir_robot/tm/testpc.py', 'w') as f:
     f.write(testpc_code)
 print("Patcher done.")

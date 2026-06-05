@@ -5,7 +5,7 @@ def _resolve_model_dir():
     candidates = [
         "/root/catkin_ws/models/sherpa-onnx-zipformer-vi-2025-04-20",
         "/root/catkin_ws/src/mir_robot/tm/sherpa-onnx-zipformer-vi-2025-04-20",
-        "/home/tuanminh/mir_project/sherpa-onnx-zipformer-vi-2025-04-20",
+        "/home/dung/mir_project/sherpa-onnx-zipformer-vi-2025-04-20",
     ]
     for candidate in candidates:
         if os.path.isdir(candidate):

@@ -11,7 +11,7 @@ from urllib.parse import urlparse, parse_qs
 os.environ['YOLO_OFFLINE'] = 'True' 
 # ==============================================================================
 
-model_path = '/home/tuanminh/mir_project/src/mir_robot/tm/best/best.pt'
+model_path = '/home/dung/mir_project/src/mir_robot/tm/best/best.pt'
 print("⏳ Đang tải AI Model (YOLO) lên TẬN DỤNG SỨC MẠNH GPU RTX 5060 HOST...")
 model = YOLO(model_path)
 

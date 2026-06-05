@@ -304,7 +304,7 @@ class VideoThread(QThread):
         self._run_flag = True
         
         print("[INFO] Đang tải mô hình cảnh báo người YOLO11n (Siêu Tốc Độ)...")
-        self.model = YOLO("/home/tuanminh/mir_project/yolo11n.pt") 
+        self.model = YOLO("/home/dung/mir_project/yolo11n.pt") 
 
         self.mp_hands = mp.solutions.hands
         self.hands = self.mp_hands.Hands(
